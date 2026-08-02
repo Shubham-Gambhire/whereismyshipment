@@ -728,7 +728,10 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
     for (const c of containers) {
       for (const e of c.timeline) rows.push({ ...e, containerId: c.id, shipmentId: c.shipmentId });
     }
-    return rows.sort((a, b) => b.timestamp - a.timestamp).slice(0, 9);
+    return rows
+      .filter((e) => e.timestamp.getTime() <= NOW.getTime())
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 12);
   }, [containers]);
 
   const trend = useMemo(() => {
@@ -813,6 +816,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
 
       {/* --- asymmetric body: map dominates, queue rides alongside --- */}
       <div className="grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-4 items-start">
+        <div className="flex flex-col gap-4 min-w-0">
         <RouteMap shipments={shipments} skus={skus} />
         <Panel className="p-0 overflow-hidden">
           <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>

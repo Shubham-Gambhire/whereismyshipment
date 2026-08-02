@@ -256,7 +256,7 @@ const TAB_INTROS = {
   },
   integrations: {
     q: "Where the data would come from.",
-    a: "Carrier feeds, terminals, customs, vessel positions \u2014 and what each is genuinely good and bad at.",
+    a: "Carrier feeds, terminals, customs, vessel positions — and what each is genuinely good and bad at.",
   },
   logic: {
     q: "The full reasoning.",
@@ -309,7 +309,7 @@ export function ReadThisFirst() {
       {open && (
         <div className="px-4 pb-4">
           <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.65, color: C.textMuted, margin: 0, maxWidth: 680 }}>
-            A shipment is tracked as one container, but a business sells individual products \u2014 so when something
+            A shipment is tracked as one container, but a business sells individual products — so when something
             goes wrong, nobody can say which product is affected or how sure we even are. Every product here starts
             at 100% and loses points each time the evidence for its location weakens.
           </p>
