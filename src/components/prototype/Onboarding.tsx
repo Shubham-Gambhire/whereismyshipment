@@ -268,16 +268,21 @@ export function TabIntro({ tab }) {
   const intro = TAB_INTROS[tab];
   if (!intro) return null;
   return (
-    <div
-      className="mb-5 flex items-start gap-2.5 rounded-md px-4 py-3"
-      style={{ background: C.panel, border: `1px solid ${C.border}` }}
+    <p
+      className="mb-4 pb-2"
+      style={{
+        fontFamily: FONT_BODY,
+        fontSize: 12.5,
+        lineHeight: 1.5,
+        color: C.textMuted,
+        margin: 0,
+        maxWidth: 760,
+        borderBottom: `1px solid ${C.border}`,
+      }}
     >
-      <Info size={15} color={C.teal} className="mt-0.5 shrink-0" />
-      <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.6, color: C.textMuted, margin: 0 }}>
-        <span style={{ color: C.text, fontWeight: 600 }}>{intro.q} </span>
-        {intro.a}
-      </p>
-    </div>
+      <span style={{ color: C.text, fontWeight: 600 }}>{intro.q} </span>
+      {intro.a}
+    </p>
   );
 }
 
