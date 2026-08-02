@@ -591,100 +591,152 @@ function RiskBadge({ risk }) {
   );
 }
 
-function ConfidenceGauge({ value, thresholds }) {
+// Confidence is never just a number: the meter is paired with the evidence
+// that produced it — contributors, sources, gaps and the recommended action.
+function ConfidenceGauge({ value, thresholds, timeline }) {
   const risk = riskFromConfidence(value, thresholds);
   const color = RISK_META[risk].color;
-  const circumference = 2 * Math.PI * 54;
-  const offset = circumference * (1 - value / 100);
+
+  const detractors = (timeline ?? [])
+    .filter((e) => e.delta < 0)
+    .sort((a, b) => a.delta - b.delta)
+    .slice(0, 3);
+  const sources = Array.from(new Set((timeline ?? []).map((e) => e.source).filter(Boolean)));
+  const gaps = (timeline ?? []).filter((e) => e.dataQualityStatus === "pending" || e.type === "missingScan");
+
   return (
-    <div className="flex flex-col items-center">
-    <div className="relative flex items-center justify-center" style={{ width: 140, height: 140 }}>
-      <svg width={140} height={140} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={70} cy={70} r={54} stroke={C.border} strokeWidth={10} fill="none" />
-        <circle
-          cx={70} cy={70} r={54} stroke={color} strokeWidth={10} fill="none"
-          strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
-          style={{ transition: "stroke-dashoffset 0.6s ease" }}
-        />
-      </svg>
-      <div className="absolute flex flex-col items-center">
-        <span style={{ fontFamily: FONT_MONO, fontSize: 30, color, fontWeight: 600 }}>
-          {value.toFixed(0)}%
-        </span>
-        <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.textMuted, letterSpacing: 1 }}>
-          CONFIDENCE
-        </span>
+    <div style={{ width: "100%", maxWidth: 300 }}>
+      <div className="flex items-baseline justify-between">
+        <span style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 0.8, color: C.textFaint }}>CONFIDENCE</span>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, color }}>{value.toFixed(0)}%</span>
       </div>
-    </div>
-    <ConfidenceAdvice value={value} thresholds={thresholds} />
+      <div className="mt-1.5 h-1.5 w-full overflow-hidden" style={{ background: C.panelAlt, borderRadius: 2 }}>
+        <div
+          style={{ width: `${value}%`, height: "100%", background: color, transition: "width 200ms ease" }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between" style={{ fontFamily: FONT_MONO, fontSize: 9.5, color: C.textFaint }}>
+        <span>alert &lt; {thresholds.monitor}</span>
+        <span>clear ≥ {thresholds.clear}</span>
+      </div>
+
+      <dl className="mt-3 flex flex-col gap-1.5">
+        <EvidenceRow label="Drivers">
+          {detractors.length === 0
+            ? "No penalties applied — clean chain."
+            : detractors.map((d) => `${d.label} ${d.delta}`).join(" · ")}
+        </EvidenceRow>
+        <EvidenceRow label="Sources">{sources.length ? sources.join(" · ") : "—"}</EvidenceRow>
+        <EvidenceRow label="Gaps">
+          {gaps.length ? `${gaps.length} unreported milestone${gaps.length > 1 ? "s" : ""}` : "None open"}
+        </EvidenceRow>
+      </dl>
+
+      <ConfidenceAdvice value={value} thresholds={thresholds} />
     </div>
   );
 }
 
-// The signature element: a vertical "custody ladder" showing every event
-// in a SKU's chain of custody, with each node colored by the confidence
-// level immediately after that event — a visual signal trace rather than
-// a plain list, echoing how a control tower reads a tracking feed.
+function EvidenceRow({ label, children }) {
+  return (
+    <div className="flex gap-2" style={{ fontSize: 11.5, lineHeight: 1.45 }}>
+      <dt style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint, width: 58, flexShrink: 0, paddingTop: 1 }}>
+        {label.toUpperCase()}
+      </dt>
+      <dd style={{ fontFamily: FONT_BODY, color: C.textMuted, margin: 0 }}>{children}</dd>
+    </div>
+  );
+}
+
+/* Milestone state, derived from what the model actually knows about the event. */
+function custodyState(ev) {
+  if (ev.simulated) return { key: "predicted", label: "PREDICTED", color: C.textMuted };
+  if (ev.dataQualityStatus === "resolved") return { key: "resolved", label: "RESOLVED", color: C.teal };
+  if (ev.dataQualityStatus === "pending") return { key: "delayed", label: "DELAYED", color: C.amber };
+  if (ev.delta < 0) return { key: "exception", label: "EXCEPTION", color: C.coral };
+  return { key: "verified", label: "VERIFIED", color: C.teal };
+}
+
+// The signature view: one dense row per milestone carrying event, time,
+// location, evidence source, state and the confidence it left behind.
 function CustodyLadder({ timeline, thresholds }) {
   return (
-    <div className="relative pl-6">
-      <div
-        className="absolute left-[7px] top-2 bottom-2 w-px"
-        style={{ background: C.border }}
-      />
-      <div className="flex flex-col gap-5">
-        {timeline.map((ev, i) => {
-          const risk = riskFromConfidence(ev.confidenceAfter, thresholds);
-          const color = RISK_META[risk].color;
-          const isDisruption = ev.delta < 0;
-          return (
-            <div key={i} className="relative">
+    <div className="relative" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
+      {timeline.map((ev, i) => {
+        const st = custodyState(ev);
+        const risk = riskFromConfidence(ev.confidenceAfter, thresholds);
+        const confColor = RISK_META[risk].color;
+        const dashed = st.key === "predicted" || st.key === "delayed";
+        return (
+          <div
+            key={i}
+            className="group grid gap-x-3 gap-y-1 py-2 pl-5 pr-1 md:grid-cols-[1fr_120px_86px_54px] md:items-baseline"
+            style={{ borderBottom: `1px solid ${C.borderSoft}`, transition: "background 150ms ease" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = C.panelAlt)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            {/* rail */}
+            <span
+              className="absolute left-[5px] w-px"
+              style={{
+                background: C.border,
+                top: i === 0 ? 14 : 0,
+                bottom: i === timeline.length - 1 ? "auto" : 0,
+                height: i === timeline.length - 1 ? 14 : undefined,
+                display: "none",
+              }}
+            />
+            <div className="relative min-w-0">
               <span
-                className="absolute -left-6 top-0.5 w-3.5 h-3.5 rounded-full"
-                style={{ background: C.bg, border: `2px solid ${color}` }}
+                className="absolute"
+                style={{
+                  left: -18,
+                  top: 5,
+                  width: 7,
+                  height: 7,
+                  borderRadius: 4,
+                  background: dashed ? "transparent" : st.color,
+                  border: `1px solid ${st.color}`,
+                }}
               />
-              <div className="flex items-baseline justify-between gap-3 flex-wrap">
-                <span
-                  style={{
-                    fontFamily: FONT_BODY,
-                    fontWeight: isDisruption ? 600 : 500,
-                    color: isDisruption ? color : C.text,
-                    fontSize: 14,
-                  }}
-                >
-                  <Glossed text={ev.label} />
-                  {ev.dataQualityStatus === "pending" && (
-                    <span style={{ fontFamily: FONT_MONO, fontSize: 10, marginLeft: 8, color: C.amber, border: `1px solid ${C.amber}`, borderRadius: 4, padding: "1px 5px" }}>
-                      PENDING · GRACE WINDOW
-                    </span>
-                  )}
-                  {ev.dataQualityStatus === "resolved" && (
-                    <span style={{ fontFamily: FONT_MONO, fontSize: 10, marginLeft: 8, color: C.teal, border: `1px solid ${C.teal}`, borderRadius: 4, padding: "1px 5px" }}>
-                      SELF-HEALED
-                    </span>
-                  )}
-                  {ev.simulated && (
-                    <span style={{ fontFamily: FONT_MONO, fontSize: 10, marginLeft: 8, color: C.amber, border: `1px solid ${C.amber}`, borderRadius: 4, padding: "1px 5px" }}>
-                      SIMULATED
-                    </span>
-                  )}
-                  {isDisruption && (
-                    <span style={{ fontFamily: FONT_MONO, fontSize: 12, marginLeft: 8, color }}>
-                      {ev.delta}
-                    </span>
-                  )}
-                </span>
-                <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>
-                  {ev.timestamp.toISOString().slice(0, 16).replace("T", " ")} · {ev.location}
-                </span>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.text, fontWeight: st.key === "exception" ? 600 : 400 }}>
+                <Glossed text={ev.label} />
+                {ev.delta < 0 && (
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 11.5, marginLeft: 6, color: C.coral }}>{ev.delta}</span>
+                )}
               </div>
-              <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textMuted, marginTop: 2 }}>
-                confidence → <span style={{ color }}>{ev.confidenceAfter}%</span>
+              <div style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, marginTop: 1 }}>
+                {ev.location} · {ev.source ?? "no source"}
               </div>
             </div>
-          );
-        })}
-      </div>
+
+            <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textMuted }}>
+              {ev.timestamp.toISOString().slice(0, 16).replace("T", " ")}
+            </div>
+
+            <div>
+              <span
+                style={{
+                  fontFamily: FONT_MONO,
+                  fontSize: 9.5,
+                  letterSpacing: 0.6,
+                  color: st.color,
+                  border: `1px solid ${st.color}44`,
+                  background: `${st.color}14`,
+                  borderRadius: 3,
+                  padding: "1px 5px",
+                }}
+              >
+                {st.label}
+              </span>
+            </div>
+
+            <div className="md:text-right" style={{ fontFamily: FONT_MONO, fontSize: 12, color: confColor }}>
+              {ev.confidenceAfter}%
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -693,7 +745,12 @@ function Panel({ children, style, className = "" }) {
   return (
     <div
       className={`rounded-md ${className}`}
-      style={{ background: C.panel, border: `1px solid ${C.border}`, ...style }}
+      style={{
+        background: C.panel,
+        border: `1px solid ${C.borderSoft}`,
+        boxShadow: "0 1px 2px rgba(0,0,0,0.35)",
+        ...style,
+      }}
     >
       {children}
     </div>
