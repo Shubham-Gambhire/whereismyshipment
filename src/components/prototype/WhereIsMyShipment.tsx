@@ -1217,15 +1217,15 @@ function ExceptionsView({ skus, onSelectSku, preset }) {
           <table className="w-full text-sm" style={{ fontFamily: FONT_BODY, minWidth: 520 }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
-                <th className="pb-2 font-normal">SKU</th>
-                <th className="pb-2 font-normal">Customer</th>
-                <th className="pb-2 font-normal">Value</th>
-                <th className="pb-2 font-normal">Urgency</th>
-                <th className="pb-2 font-normal">SLA</th>
-                <th className="pb-2 font-normal">Container</th>
-                <th className="pb-2 font-normal">Confidence</th>
-                <th className="pb-2 font-normal">Risk</th>
-                <th className="pb-2 font-normal">Flagged for</th>
+                <th className="pb-2 pr-3 font-normal">SKU</th>
+                <th className="pb-2 pr-3 font-normal">Customer</th>
+                <th className="pb-2 pr-3 font-normal">Value</th>
+                <th className="pb-2 pr-3 font-normal">Urgency</th>
+                <th className="pb-2 pr-3 font-normal">SLA</th>
+                <th className="pb-2 pr-3 font-normal">Container</th>
+                <th className="pb-2 pr-3 font-normal">Confidence</th>
+                <th className="pb-2 pr-3 font-normal">Risk</th>
+                <th className="pb-2 pr-3 font-normal">Flagged for</th>
               </tr>
             </thead>
             <tbody>
@@ -1239,17 +1239,17 @@ function ExceptionsView({ skus, onSelectSku, preset }) {
                     style={{ borderTop: `1px solid ${C.borderSoft}`, cursor: "pointer" }}
                     onClick={() => onSelectSku(s.id)}
                   >
-                    <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.text }}>{s.id}</td>
-                    <td className="py-2" style={{ color: s.customer ? C.textMuted : C.textFaint }}>{s.customer || "\u2014"}</td>
-                    <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>${s.value.toLocaleString()}</td>
-                    <td className="py-2" style={{ fontFamily: FONT_MONO, color: urgencyColor }}>
+                    <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: C.text }}>{s.id}</td>
+                    <td className="py-2 pr-3" style={{ color: s.customer ? C.textMuted : C.textFaint }}>{s.customer || "\u2014"}</td>
+                    <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>${s.value.toLocaleString()}</td>
+                    <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: urgencyColor }}>
                       {s.urgency}{s.isLate ? " · LATE" : ""}
                     </td>
-                    <td className="py-2" style={{ color: C.textMuted, fontSize: 12 }}>{s.slaTier}</td>
-                    <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>{s.containerId}</td>
-                    <td className="py-2" style={{ fontFamily: FONT_MONO, color: RISK_META[s.risk].color }}>{s.confidence.toFixed(0)}%</td>
-                    <td className="py-2"><RiskBadge risk={s.risk} /></td>
-                    <td className="py-2" style={{ color: C.textMuted, fontSize: 12 }}><Glossed text={displayEvent?.label} /></td>
+                    <td className="py-2 pr-3" style={{ color: C.textMuted, fontSize: 12 }}>{s.slaTier}</td>
+                    <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>{s.containerId}</td>
+                    <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: RISK_META[s.risk].color }}>{s.confidence.toFixed(0)}%</td>
+                    <td className="py-2 pr-3"><RiskBadge risk={s.risk} /></td>
+                    <td className="py-2 pr-3" style={{ color: C.textMuted, fontSize: 12 }}><Glossed text={displayEvent?.label} /></td>
                   </tr>
                   <tr>
                     <td colSpan={9} className="pb-2.5" style={{ paddingLeft: 2 }}>
