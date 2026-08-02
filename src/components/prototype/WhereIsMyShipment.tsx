@@ -2505,6 +2505,7 @@ function LogicView({ weights, thresholds }) {
       </Panel>
 
       {/* Weights + mode comparison */}
+      <span id="logic-event-weights" aria-hidden="true" style={{ display: "block", scrollMarginTop: 96 }} />
       <Panel className="p-6">
         <div className="flex items-center gap-2 mb-1">
           <Sliders size={16} color={C.amber} />
