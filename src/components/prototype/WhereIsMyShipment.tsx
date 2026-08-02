@@ -1168,21 +1168,30 @@ function RouteMap({ shipments, skus }) {
 
   return (
     <Panel className="p-0 overflow-hidden">
-      <div className="px-4 py-3 flex items-center justify-between gap-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
+      <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
         <div className="min-w-0">
           <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>Where everything is right now</h3>
           <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 2 }}>
             22 busiest lanes, coloured by the weakest SKU on board.
           </p>
         </div>
-        <div className="hidden sm:flex gap-3 shrink-0">
-          {[["Clear", C.teal], ["Monitor", C.amber], ["Alert", C.coral]].map(([l, c]) => (
-            <span key={l} className="flex items-center gap-1.5" style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textMuted }}>
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />{l}
+        <div className="mt-2.5 flex flex-col gap-1">
+          {[
+            ["Clear", C.teal, `every SKU on the lane scores ${DEFAULT_THRESHOLDS.clear}% or above. Nothing to do.`],
+            ["Monitor", C.amber, `weakest SKU sits between ${DEFAULT_THRESHOLDS.monitor}% and ${DEFAULT_THRESHOLDS.clear - 1}%. Evidence is thinning.`],
+            ["Alert", C.coral, `weakest SKU is below ${DEFAULT_THRESHOLDS.monitor}%. Someone should look at it today.`],
+          ].map(([l, c, desc]) => (
+            <span key={l} className="flex items-start gap-2" style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.textFaint }}>
+              <span className="w-3.5 h-0.5 rounded-full shrink-0" style={{ background: c, marginTop: 6 }} />
+              <span>
+                <span style={{ fontFamily: FONT_MONO, color: c, fontSize: 10.5 }}>{l.toUpperCase()}</span>{" "}
+                {desc}
+              </span>
             </span>
           ))}
         </div>
       </div>
+
       <svg viewBox="0 25 360 100" style={{ width: "100%", display: "block", background: "#060B0F" }}>
         {[-120, -60, 0, 60, 120].map((lon) => (
           <line key={lon} x1={px(lon)} x2={px(lon)} y1={25} y2={125} stroke={C.borderSoft} strokeWidth={0.3} />
