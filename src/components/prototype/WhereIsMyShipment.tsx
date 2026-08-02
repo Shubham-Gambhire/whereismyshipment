@@ -12,7 +12,7 @@ import {
   Bell, Satellite, Database, RotateCcw, PlayCircle, Sliders, X, CheckCircle2,
   Settings, CloudRain, MapPinned, Clock
 } from "lucide-react";
-import { Glossed, Term, ConfidenceAdvice, ReadThisFirst } from "./Onboarding";
+import { Glossed, Term, ConfidenceAdvice, ReadThisFirst, TabIntro } from "./Onboarding";
 
 /* ---------------------------------------------------------
    DESIGN TOKENS
@@ -2464,6 +2464,7 @@ export default function App() {
 
 
       <main className="p-6 max-w-6xl mx-auto">
+        <TabIntro tab={tab} />
         {tab === "dashboard" && (
           <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} />
         )}

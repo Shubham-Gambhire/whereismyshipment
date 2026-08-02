@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Hero } from "@/components/showcase/Hero";
-import { ApproachSection, ProblemSection } from "@/components/showcase/ProblemApproach";
-import { Concepts } from "@/components/showcase/Concepts";
-import { Architecture, Highlights, Implementation, Limitations, Process } from "@/components/showcase/Sections";
+import { lazy, Suspense, useEffect, useState } from "react";
+
+const App = lazy(() => import("@/components/prototype/WhereIsMyShipment"));
 
 const title = "Where Is My Shipment — Supply Chain Visibility Prototype";
 const description =
-  "A digital supply chain prototype: SKU-level confidence scoring, chain-of-custody reconstruction, risk analytics and what-if disruption simulation.";
+  "An interactive logistics visibility prototype: SKU-level confidence scoring, chain-of-custody reconstruction, exception triage and what-if disruption simulation on synthetic ocean freight data.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -15,23 +14,36 @@ export const Route = createFileRoute("/")({
       { name: "description", content: description },
       { property: "og:title", content: title },
       { property: "og:description", content: description },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: title },
+      { name: "twitter:description", content: description },
     ],
   }),
   component: Index,
 });
 
 function Index() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   return (
-    <main className="min-h-screen bg-background">
-      <Hero />
-      <ProblemSection />
-      <ApproachSection />
-      <Concepts />
-      <Process />
-      <Architecture />
-      <Implementation />
-      <Limitations />
-      <Highlights />
-    </main>
+    <div className="min-h-screen bg-background">
+      {mounted ? (
+        <Suspense fallback={<Loading />}>
+          <App />
+        </Suspense>
+      ) : (
+        <Loading />
+      )}
+    </div>
+  );
+}
+
+function Loading() {
+  return (
+    <div className="flex min-h-[70vh] items-center justify-center">
+      <p className="font-mono text-xs text-text-faint">Generating synthetic shipment data…</p>
+    </div>
   );
 }
