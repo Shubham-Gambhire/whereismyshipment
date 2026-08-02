@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { ArrowUpRight, Github, Mail } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ArrowUpRight, Github, Mail, PlayCircle } from "lucide-react";
+
 import { BrowserFrame } from "./BrowserFrame";
 import { DashboardMock } from "./mocks";
 import { GITHUB_URL, CONTACT_URL } from "./links";
