@@ -133,7 +133,7 @@ export function Term({ term, children }) {
             width: 268,
             background: C.panelAlt,
             border: `1px solid ${C.border}`,
-            borderRadius: 10,
+            borderRadius: 6,
             padding: "10px 12px",
             boxShadow: "0 18px 40px -18px rgba(0,0,0,0.9)",
             fontFamily: FONT_BODY,
