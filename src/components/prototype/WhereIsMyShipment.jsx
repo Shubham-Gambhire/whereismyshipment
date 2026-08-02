@@ -10,6 +10,7 @@ import {
   Bell, Satellite, Database, RotateCcw, PlayCircle, Sliders, X, CheckCircle2,
   Settings, CloudRain, MapPinned, Clock
 } from "lucide-react";
+import { Glossed, Term, ConfidenceAdvice, TabIntro, ReadThisFirst } from "./Onboarding";
 
 /* ---------------------------------------------------------
    DESIGN TOKENS
@@ -553,6 +554,7 @@ function ConfidenceGauge({ value, thresholds }) {
   const circumference = 2 * Math.PI * 54;
   const offset = circumference * (1 - value / 100);
   return (
+    <div className="flex flex-col items-center">
     <div className="relative flex items-center justify-center" style={{ width: 140, height: 140 }}>
       <svg width={140} height={140} style={{ transform: "rotate(-90deg)" }}>
         <circle cx={70} cy={70} r={54} stroke={C.border} strokeWidth={10} fill="none" />
@@ -570,6 +572,8 @@ function ConfidenceGauge({ value, thresholds }) {
           CONFIDENCE
         </span>
       </div>
+    </div>
+    <ConfidenceAdvice value={value} thresholds={thresholds} />
     </div>
   );
 }
@@ -605,7 +609,7 @@ function CustodyLadder({ timeline, thresholds }) {
                     fontSize: 14,
                   }}
                 >
-                  {ev.label}
+                  <Glossed text={ev.label} />
                   {ev.dataQualityStatus === "pending" && (
                     <span style={{ fontFamily: FONT_MONO, fontSize: 10, marginLeft: 8, color: C.amber, border: `1px solid ${C.amber}`, borderRadius: 4, padding: "1px 5px" }}>
                       PENDING · GRACE WINDOW
@@ -697,6 +701,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <ReadThisFirst />
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <KpiCard label="Active Shipments" value={kpis.totalShipments} icon={Ship} />
         <KpiCard label="Avg. Confidence" value={`${kpis.avgConfidence.toFixed(1)}%`} icon={Gauge} accent={C.teal} />
@@ -1386,8 +1391,10 @@ function SettingsView({
           <div className="flex items-start gap-2" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 13, lineHeight: 1.5, maxWidth: 620 }}>
             <Settings size={15} color={C.teal} className="mt-0.5 shrink-0" />
             <span>
-              These are the actual dials behind the confidence engine. Changes apply instantly across
-              every tab — Dashboard, SKU Search, Exceptions, and the Simulator all read from these same values.
+              <strong style={{ color: C.text, fontWeight: 600 }}>How the model is tuned.</strong> Every number
+              below is a judgement call, not a technical setting: how much a customs hold should really count,
+              where the line between "watch it" and "act on it" sits, how much to trust each data source.
+              Change one and every tab — Dashboard, SKU Search, Exceptions, Simulator — updates instantly.
             </span>
           </div>
           <button
@@ -2455,6 +2462,7 @@ export default function App() {
 
 
       <main className="p-6 max-w-6xl mx-auto">
+        <TabIntro tab={tab} />
         {tab === "dashboard" && (
           <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} />
         )}
