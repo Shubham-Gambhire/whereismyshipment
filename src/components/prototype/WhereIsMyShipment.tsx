@@ -836,32 +836,36 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
   const staleFeed = [...feeds].sort((a, b) => (b.hrs ?? 9999) - (a.hrs ?? 9999))[0];
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <ReadThisFirst />
 
       {/* --- status strip: four numbers, each one a way in --- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div
+        className="grid grid-cols-2 lg:grid-cols-4 overflow-hidden"
+        style={{ border: `1px solid ${C.border}`, borderRadius: 6, background: C.panel }}
+      >
         <StatusTile
-          count={kpis.needAttention} unit="containers" label="Need attention today"
-          sub="Confidence has fallen below your alert line."
-          color={C.coral} onClick={() => onDrill("alert")}
+          count={kpis.needAttention} unit="containers" label="Need attention"
+          sub="Confidence below the alert line."
+          color={C.coral} onClick={() => onDrill("alert")} first
         />
         <StatusTile
-          count={kpis.customsDelayed} unit="containers" label="Sitting in customs"
-          sub="Held for inspection. Mostly clears itself."
+          count={kpis.customsDelayed} unit="containers" label="In customs"
+          sub="Held for inspection. Mostly self-clears."
           color={C.amber} onClick={() => onDrill("customs")}
         />
         <StatusTile
-          count={kpis.highValueAtRisk} unit="containers" label="High-value at risk"
-          sub="Over $20k of stock behind weak evidence."
+          count={kpis.highValueAtRisk} unit="containers" label="High value at risk"
+          sub="Over $20k behind weak evidence."
           color={C.coral} onClick={() => onDrill("highvalue")}
         />
         <StatusTile
-          count={`${kpis.avgConfidence.toFixed(0)}%`} unit="" label="Fleet-wide confidence"
-          sub="Average across every SKU in transit."
+          count={`${kpis.avgConfidence.toFixed(0)}%`} unit="" label="Fleet confidence"
+          sub="Mean across every SKU in transit."
           color={kpis.avgConfidence >= 85 ? C.teal : C.amber} onClick={() => onDrill("all")}
         />
       </div>
+
 
       {staleFeed && (
         <div
