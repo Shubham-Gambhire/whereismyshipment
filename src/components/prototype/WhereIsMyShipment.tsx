@@ -1354,37 +1354,6 @@ function ExceptionsView({ skus, onSelectSku, preset }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex gap-2">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setFilter(t.key)}
-              className="px-3.5 py-1.5 rounded-full text-xs"
-              style={chipStyle(filter === t.key, C.teal)}
-            >
-              {t.label.toUpperCase()}
-            </button>
-          ))}
-        </div>
-        <div className="flex rounded-md overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
-          <button
-            onClick={() => setSortMode("confidence")}
-            className="px-3 py-1.5 text-xs"
-            style={{ fontFamily: FONT_MONO, background: sortMode === "confidence" ? C.panelAlt : "transparent", color: sortMode === "confidence" ? C.teal : C.textMuted }}
-          >
-            SORT: CONFIDENCE
-          </button>
-          <button
-            onClick={() => setSortMode("priority")}
-            className="px-3 py-1.5 text-xs"
-            style={{ fontFamily: FONT_MONO, background: sortMode === "priority" ? C.panelAlt : "transparent", color: sortMode === "priority" ? C.teal : C.textMuted }}
-          >
-            SORT: PRIORITY SCORE
-          </button>
-        </div>
-      </div>
-
       <Panel className="p-4">
         <div className="flex items-center justify-between mb-3">
           <span style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13 }}>Filters</span>
@@ -1393,6 +1362,33 @@ function ExceptionsView({ skus, onSelectSku, preset }) {
           </button>
         </div>
         <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-2 items-center">
+            <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint, minWidth: 62 }}>STATUS</span>
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setFilter(t.key)}
+                className="px-2.5 py-1 rounded-full text-xs"
+                style={chipStyle(filter === t.key, C.teal)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint, minWidth: 62 }}>SORT BY</span>
+            {[["confidence", "Lowest confidence"], ["priority", "Priority score"]].map(([k, l]) => (
+              <button
+                key={k}
+                onClick={() => setSortMode(k)}
+                className="px-2.5 py-1 rounded-full text-xs"
+                style={chipStyle(sortMode === k, C.teal)}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+
           <div className="flex flex-wrap gap-2 items-center">
             <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint, minWidth: 62 }}>URGENCY</span>
             {["Low", "Medium", "High"].map((u) => (
