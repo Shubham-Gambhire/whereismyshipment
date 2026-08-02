@@ -1127,10 +1127,11 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                   className="text-left p-3 rounded-lg flex items-center justify-between gap-2"
                   style={{ background: active ? C.panelAlt : C.panel, border: `1px solid ${active ? m.color : C.border}` }}
                 >
-                  <div className="flex flex-col gap-0.5">
-                    <span style={{ fontFamily: FONT_MONO, color: C.text, fontSize: 13 }}>{s.id}</span>
-                    <span style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.customer}</span>
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className="truncate" style={{ fontFamily: FONT_MONO, color: C.text, fontSize: 13 }}>{s.id}</span>
+                    <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.customer}</span>
                   </div>
+
                   <span style={{ fontFamily: FONT_MONO, color: m.color, fontSize: 13 }}>{s.confidence.toFixed(0)}%</span>
                 </button>
               );
