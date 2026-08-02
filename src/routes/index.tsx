@@ -26,10 +26,11 @@ function Index() {
       <Hero />
       <ProblemSection />
       <ApproachSection />
-      <Walkthrough />
       <Concepts />
       <Process />
       <Architecture />
+      <Implementation />
+      <Limitations />
       <Stack />
       <Highlights />
     </main>
