@@ -296,12 +296,12 @@ export function ReadThisFirst() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+        className="flex w-full items-center justify-between gap-3 px-3.5 py-2 text-left"
         style={{ background: "transparent", border: "none", cursor: "pointer" }}
       >
         <span className="flex items-center gap-2 min-w-0">
           <HelpCircle size={15} color={C.teal} className="shrink-0" />
-          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: C.text }} className="truncate">
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 12.5, fontWeight: 600, color: C.text }} className="truncate">
             First time here?
           </span>
         </span>
@@ -312,13 +312,13 @@ export function ReadThisFirst() {
         />
       </button>
       {open && (
-        <div className="px-4 pb-4">
-          <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.65, color: C.textMuted, margin: 0, maxWidth: 680 }}>
+        <div className="px-3.5 pb-3">
+          <p style={{ fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.55, color: C.textMuted, margin: 0, maxWidth: 720 }}>
             A shipment is tracked as one container, but a business sells individual products — so when something
             goes wrong, nobody can say which product is affected or how sure we even are. Every product here starts
             at 100% and loses points each time the evidence for its location weakens.
           </p>
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
             {[
               ["Clear", C.teal, "well evidenced, keep the date"],
               ["Monitor", C.amber, "thinning, warn the customer"],
@@ -330,7 +330,7 @@ export function ReadThisFirst() {
               </span>
             ))}
           </div>
-          <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 10 }}>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 7 }}>
             Dotted underlines explain the jargon. All data is synthetic.
           </p>
         </div>
