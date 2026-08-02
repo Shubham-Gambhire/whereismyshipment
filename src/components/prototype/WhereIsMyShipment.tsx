@@ -178,6 +178,44 @@ const ROUTE_ZONES = [
 ];
 const ROUTE_ZONE_LABELS = Object.fromEntries(ROUTE_ZONES.map((z) => [z.key, z.label]));
 
+// Approximate lon/lat for the synthetic port set — used only to place dots
+// and lanes on the control-tower map. Not survey-grade; good enough to make
+// the geography readable at a glance.
+const PORT_COORDS = {
+  Shanghai: [121.5, 31.2], Rotterdam: [4.4, 51.9], "Los Angeles": [-118.2, 33.7],
+  Singapore: [103.8, 1.3], Busan: [129.0, 35.1], Hamburg: [10.0, 53.5],
+  Santos: [-46.3, -23.9], "Jebel Ali": [55.0, 25.0], Ningbo: [121.6, 29.9],
+  Antwerp: [4.4, 51.2], "Long Beach": [-118.2, 33.8], Colombo: [79.8, 6.9],
+};
+
+// The line an experienced control-tower operator would actually write next
+// to an exception. Deliberately opinionated — half of these say "don't act".
+const OPERATOR_NOTES = {
+  sealBroken: "Seal integrity is gone. Don't wait for the carrier's explanation \u2014 open a claim file now and inspect at gate-out.",
+  customsHold: "Customs hold. Most of these clear in 48\u201372h. Only escalate if it's a contractual line or perishable.",
+  missingScan: "Nine times out of ten this is terminal reporting lag, not a lost box. Chase the terminal before you chase the customer.",
+  gpsAnomaly: "The tracker is drifting, not the container. Cross-check the carrier feed before you tell anyone anything.",
+  dataConflict: "Two systems disagree. That's a sync problem, not a cargo problem \u2014 reconcile it, don't escalate it.",
+  timestampAnomaly: "Event logged out of sequence. Data quality issue; the physical move is probably fine.",
+  customsHoldLate: "Customs hold on an already-late box. Assume the date is gone and re-plan.",
+  weather: "Weather slip. Re-issue the ETA; expediting buys you nothing against a storm.",
+  delay: "Routine slip. Re-issue the date rather than paying to expedite.",
+  hormuz: "Transiting Hormuz. Watch for GPS interference in the position feed \u2014 it looks like a tracking fault but isn't.",
+  gulfOfAden: "Piracy corridor. Nothing to do operationally, but flag it to insurance if the value is high.",
+  malacca: "Malacca transit. Small-scale theft risk; worth a seal check at the next port, not an escalation.",
+  redSea: "Red Sea routing. If this lane matters to you, ask the carrier now whether they're going around the Cape.",
+  watchlistTouch: "Touches a watchlisted location. Compliance question before an operations one \u2014 route it to them first.",
+};
+function operatorNote(sku) {
+  const cause = [...(sku.timeline || [])].reverse().find((e) => e.delta < 0);
+  const key = cause?.type;
+  if (key === "customsHold" && sku.isLate) return OPERATOR_NOTES.customsHoldLate;
+  const base = OPERATOR_NOTES[key];
+  if (base) return base;
+  if (sku.confidence < 60) return "No single clear cause \u2014 evidence has just thinned out across the chain. Treat the date as unsafe.";
+  return "Nothing dramatic here. Watch it for another 24h before doing anything.";
+}
+
 // Data sources feeding the confidence engine, and how much to trust each
 // one's anomaly reports by default — tunable in Settings. A known-noisy
 // source (GPS telemetry glitches, manual scan human error) has its
@@ -329,7 +367,7 @@ function generateData() {
       for (let i = 0; i < EVENT_SEQUENCE.length && reachedCount < numEventsReached; i++) {
         const ev = EVENT_SEQUENCE[i];
         if (ev.optional && rng() > ev.optional) continue;
-        t += randInt(1, 4) * 86400000 * 0.6;
+        t += randInt(1, 4) * 86400000 * 0.6 + randInt(0, 1439) * 60000;
         events.push({
           type: ev.key,
           label: ev.label,
@@ -349,7 +387,7 @@ function generateData() {
           disruptionEvents.push({
             type: d.key,
             label: d.label,
-            timestamp: new Date(baseTime + randInt(1, 6) * 3600000),
+            timestamp: new Date(baseTime + randInt(1, 6) * 3600000 + randInt(0, 59) * 60000),
             location: events[afterIdx].location,
             delta: d.delta,
             source: d.source,
@@ -368,7 +406,7 @@ function generateData() {
           disruptionEvents.push({
             type: z.key,
             label: `Transited ${z.label}`,
-            timestamp: new Date(baseTime + randInt(1, 6) * 3600000),
+            timestamp: new Date(baseTime + randInt(1, 6) * 3600000 + randInt(0, 59) * 60000),
             location: z.label,
             delta: z.delta,
             source: z.source,
@@ -386,7 +424,7 @@ function generateData() {
         disruptionEvents.push({
           type: "dataConflict",
           label: `Data Conflict: ${srcA} vs ${srcB}`,
-          timestamp: new Date(anchor.timestamp.getTime() + randInt(1, 6) * 3600000),
+          timestamp: new Date(anchor.timestamp.getTime() + randInt(1, 6) * 3600000 + randInt(0, 59) * 60000),
           location: anchor.location,
           delta: DEFAULT_WEIGHTS.dataConflict,
         });
@@ -493,11 +531,14 @@ function generateData() {
         const slaTier = weightedPick(SLA_TIERS, SLA_TIER_WEIGHTS);
         const perishable = category === "Pharmaceuticals" ? true : rng() < 0.05;
         const shelfLifeDays = perishable ? randInt(5, 90) : null;
+        // Real feeds are incomplete. A small share of records arrive with
+        // fields the source never populated — shown as "\u2014", never invented.
+        const customerMissing = rng() < 0.025;
         skus.push({
           id: skuId,
           description: `${category} item`,
           category,
-          customer,
+          customer: customerMissing ? null : customer,
           quantity,
           value,
           slaTier,
@@ -660,141 +701,337 @@ function Panel({ children, style, className = "" }) {
 }
 
 /* ---------------------------------------------------------
-   DASHBOARD VIEW
+   CONTROL TOWER (DASHBOARD)
+   Status strip -> map + priority queue -> event stream + trend.
+   Every number in the strip is a filter, not a decoration.
 --------------------------------------------------------- */
-function DashboardView({ shipments, containers, skus, onSelectSku }) {
+function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
   const kpis = useMemo(() => {
     const avgConfidence = skus.reduce((a, s) => a + s.confidence, 0) / skus.length;
-    const disrupted = containers.filter((c) =>
-      c.timeline.some((e) => e.delta < 0)
-    ).length;
-    const critical = skus.filter((s) => s.risk === "alert").length;
-    const highRiskWaters = shipments.filter((s) => s.routeZones && s.routeZones.length > 0).length;
-    const lateShipments = shipments.filter((s) => s.isLate).length;
-    return {
-      totalShipments: shipments.length,
-      avgConfidence,
-      disruptedContainers: disrupted,
-      criticalSkus: critical,
-      highRiskWaters,
-      lateShipments,
-    };
-  }, [shipments, containers, skus]);
-
-  const riskCounts = useMemo(() => {
-    const counts = { clear: 0, monitor: 0, alert: 0 };
-    skus.forEach((s) => counts[s.risk]++);
-    return [
-      { name: "Clear", value: counts.clear, color: C.teal },
-      { name: "Monitor", value: counts.monitor, color: C.amber },
-      { name: "Alert", value: counts.alert, color: C.coral },
-    ];
+    const needAttention = new Set(skus.filter((s) => s.risk === "alert").map((s) => s.containerId)).size;
+    const customsDelayed = new Set(
+      skus.filter((s) => s.timeline.some((e) => e.type === "customsHold")).map((s) => s.containerId)
+    ).size;
+    const highValueAtRisk = new Set(
+      skus.filter((s) => s.risk !== "clear" && s.value >= 20000).map((s) => s.containerId)
+    ).size;
+    return { avgConfidence, needAttention, customsDelayed, highValueAtRisk };
   }, [skus]);
 
-  const distByCategory = useMemo(() => {
-    const map = {};
-    skus.forEach((s) => {
-      map[s.category] = map[s.category] || { name: s.category, avg: 0, count: 0 };
-      map[s.category].avg += s.confidence;
-      map[s.category].count += 1;
+  // One line per container: six rows of the same box is a queue nobody
+  // can work from.
+  const priority = useMemo(() => {
+    const seen = new Set();
+    return [...skus]
+      .filter((s) => s.risk !== "clear")
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .filter((s) => (seen.has(s.containerId) ? false : seen.add(s.containerId)))
+      .slice(0, 6);
+  }, [skus]);
+
+  const recentEvents = useMemo(() => {
+    const rows = [];
+    for (const c of containers) {
+      for (const e of c.timeline) rows.push({ ...e, containerId: c.id, shipmentId: c.shipmentId });
+    }
+    return rows
+      .filter((e) => e.timestamp.getTime() <= NOW.getTime())
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 12);
+  }, [containers]);
+
+  const trend = useMemo(() => {
+    const sample = skus.filter((_, i) => i % 3 === 0);
+    const days = [];
+    for (let d = 13; d >= 0; d--) {
+      const cutoff = NOW.getTime() - d * 86400000;
+      let sum = 0;
+      for (const s of sample) {
+        let v = 100;
+        for (const e of s.timeline) {
+          if (e.timestamp.getTime() <= cutoff) v = e.confidenceAfter;
+          else break;
+        }
+        sum += v;
+      }
+      days.push({ d, value: sum / sample.length });
+    }
+    return days;
+  }, [skus]);
+
+  // Feed health. One source is deliberately behind — real control towers
+  // always have one, and pretending otherwise is the tell of a fake demo.
+  const feeds = useMemo(() => {
+    const latest = {};
+    for (const c of containers) {
+      for (const e of c.timeline) {
+        if (e.timestamp.getTime() > NOW.getTime()) continue;
+        const src = e.source || "Carrier EDI";
+        if (!latest[src] || e.timestamp > latest[src]) latest[src] = e.timestamp;
+      }
+    }
+    return DATA_SOURCES.map((src) => {
+      const ts = latest[src];
+      const hrs = ts ? (NOW.getTime() - ts.getTime()) / 3600000 : null;
+      return { src, hrs };
     });
-    return Object.values(map).map((c) => ({ name: c.name, avg: Math.round(c.avg / c.count) }));
-  }, [skus]);
+  }, [containers]);
+  const staleFeed = [...feeds].sort((a, b) => (b.hrs ?? 9999) - (a.hrs ?? 9999))[0];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <ReadThisFirst />
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-        <KpiCard label="Active Shipments" value={kpis.totalShipments} icon={Ship} />
-        <KpiCard label="Avg. Confidence" value={`${kpis.avgConfidence.toFixed(1)}%`} icon={Gauge} accent={C.teal} />
-        <KpiCard label="Disrupted Containers" value={kpis.disruptedContainers} icon={ContainerIcon} accent={C.amber} />
-        <KpiCard label="Critical SKUs" value={kpis.criticalSkus} icon={AlertTriangle} accent={C.coral} />
-        <KpiCard label="Through High-Risk Waters" value={kpis.highRiskWaters} icon={MapPinned} accent={C.coral} />
-        <KpiCard label="Late Shipments" value={kpis.lateShipments} icon={Clock} accent={C.amber} />
+
+      {/* --- status strip: four numbers, each one a way in --- */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatusTile
+          count={kpis.needAttention} unit="containers" label="Need attention today"
+          sub="Confidence has fallen below your alert line."
+          color={C.coral} onClick={() => onDrill("alert")}
+        />
+        <StatusTile
+          count={kpis.customsDelayed} unit="containers" label="Sitting in customs"
+          sub="Held for inspection. Mostly clears itself."
+          color={C.amber} onClick={() => onDrill("customs")}
+        />
+        <StatusTile
+          count={kpis.highValueAtRisk} unit="containers" label="High-value at risk"
+          sub="Over $20k of stock behind weak evidence."
+          color={C.coral} onClick={() => onDrill("highvalue")}
+        />
+        <StatusTile
+          count={`${kpis.avgConfidence.toFixed(0)}%`} unit="" label="Fleet-wide confidence"
+          sub="Average across every SKU in transit."
+          color={kpis.avgConfidence >= 85 ? C.teal : C.amber} onClick={() => onDrill("all")}
+        />
       </div>
 
-      <div className="grid md:grid-cols-5 gap-4 min-w-0">
-        <Panel className="p-5 md:col-span-3">
-          <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }} className="mb-4">
-            Average confidence by category
-          </h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={distByCategory} margin={{ left: -20 }}>
-              <CartesianGrid stroke={C.borderSoft} vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: C.textMuted, fontSize: 11 }} axisLine={{ stroke: C.border }} tickLine={false} interval={0} angle={-20} textAnchor="end" height={60} />
-              <YAxis domain={[0, 100]} tick={{ fill: C.textMuted, fontSize: 11 }} axisLine={{ stroke: C.border }} tickLine={false} />
-              <Tooltip contentStyle={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: FONT_MONO, fontSize: 12 }} />
-              <Bar dataKey="avg" fill={C.teal} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Panel>
+      {staleFeed && (
+        <div
+          className="flex items-start gap-2 rounded-lg px-3 py-2"
+          style={{ background: C.panelAlt, border: `1px solid ${C.amberDim}` }}
+        >
+          <Radio size={13} color={C.amber} className="mt-0.5 shrink-0" />
+          <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.textMuted, lineHeight: 1.5 }}>
+            <span style={{ color: C.amber, fontFamily: FONT_MONO, fontSize: 11 }}>SLOWEST FEED · </span>
+            {staleFeed.hrs === null ? (
+              <>No <Term term={staleFeed.src}>{staleFeed.src}</Term> message has landed in this window at all.</>
+            ) : (
+              <>Last <Term term={staleFeed.src}>{staleFeed.src}</Term> message came in{" "}
+              {`${Math.floor(staleFeed.hrs)}h ${Math.round((staleFeed.hrs % 1) * 60)}m ago`}.</>
+            )}{" "}
+            Anything relying on it is older than it looks.
+          </span>
+        </div>
+      )}
 
-        <Panel className="p-5 md:col-span-2">
-          <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }} className="mb-4">
-            SKU risk breakdown
-          </h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie data={riskCounts} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={3}>
-                {riskCounts.map((r, i) => <Cell key={i} fill={r.color} stroke={C.panel} />)}
-              </Pie>
-              <Tooltip contentStyle={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: FONT_MONO, fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="flex justify-center gap-4 mt-1">
-            {riskCounts.map((r) => (
-              <div key={r.name} className="flex items-center gap-1.5" style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textMuted }}>
-                <span className="w-2 h-2 rounded-full" style={{ background: r.color }} /> {r.name} ({r.value})
-              </div>
-            ))}
+      {/* --- asymmetric body: map dominates, queue rides alongside --- */}
+      <div className="grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-4 items-start">
+        <div className="flex flex-col gap-4 min-w-0">
+          <RouteMap shipments={shipments} skus={skus} />
+        <Panel className="p-0 overflow-hidden">
+          <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
+            <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>Coming in off the feeds</h3>
+          </div>
+          <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <table className="w-full" style={{ fontFamily: FONT_BODY, fontSize: 12, minWidth: 460 }}>
+              <tbody>
+                {recentEvents.map((e, i) => (
+                  <tr key={i} style={{ borderTop: i ? `1px solid ${C.borderSoft}` : "none" }}>
+                    <td className="px-4 py-1.5 whitespace-nowrap align-top" style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>
+                      {e.timestamp.toISOString().slice(5, 16).replace("T", " ")}
+                    </td>
+                    <td className="py-1.5 pr-3 align-top" style={{ color: C.text }}>
+                      <Glossed text={e.label} />
+                    </td>
+                    <td className="py-1.5 pr-3 whitespace-nowrap align-top" style={{ color: C.textMuted }}>{e.location}</td>
+                    <td className="py-1.5 pr-4 text-right whitespace-nowrap align-top" style={{ fontFamily: FONT_MONO, fontSize: 11, color: e.delta < 0 ? C.coral : C.textFaint }}>
+                      {e.delta < 0 ? e.delta : "\u2014"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </Panel>
-      </div>
-
-      <Panel className="p-5">
-        <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }} className="mb-4">
-          Shipments in transit
-        </h3>
-        <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY, minWidth: 520 }}>
-            <thead>
-              <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
-                <th className="pb-2 font-normal">Shipment</th>
-                <th className="pb-2 font-normal">Vessel</th>
-                <th className="pb-2 font-normal">Route</th>
-                <th className="pb-2 font-normal">ETA</th>
-                <th className="pb-2 font-normal">Current Event</th>
-                <th className="pb-2 font-normal">Containers</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shipments.slice(0, 12).map((s) => (
-                <tr key={s.id} style={{ borderTop: `1px solid ${C.borderSoft}` }}>
-                  <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.text }}>{s.id}</td>
-                  <td className="py-2" style={{ color: C.text }}>{s.vessel}</td>
-                  <td className="py-2" style={{ color: C.textMuted }}>{s.origin} → {s.destination}</td>
-                  <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>{s.eta.toISOString().slice(0, 10)}</td>
-                  <td className="py-2" style={{ color: C.textMuted }}><Glossed text={s.currentEvent} /></td>
-                  <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>{s.containerIds.length}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
-      </Panel>
+        <div className="flex flex-col gap-4 min-w-0">
+        <Panel className="p-0 overflow-hidden">
+          <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
+            <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>What I'd chase first</h3>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 2 }}>
+              Ranked by value, urgency and how thin the evidence is.
+            </p>
+          </div>
+          <div>
+            {priority.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => onSelectSku(s.id)}
+                className="w-full text-left px-4 py-3 block"
+                style={{ borderBottom: `1px solid ${C.borderSoft}`, background: "transparent" }}
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: C.text }}>{s.id}</span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: RISK_META[s.risk].color }}>
+                    {s.confidence.toFixed(0)}%
+                  </span>
+                </div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted, marginTop: 1 }} className="truncate">
+                  {s.customer || "\u2014 customer not reported"} · ${s.value.toLocaleString()} · {s.urgency} urgency
+                </div>
+                <div
+                  style={{
+                    fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted, lineHeight: 1.5,
+                    marginTop: 6, paddingLeft: 8, borderLeft: `2px solid ${RISK_META[s.risk].color}`,
+                  }}
+                >
+                  {operatorNote(s)}
+                </div>
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => onDrill("all")}
+            className="w-full px-4 py-2.5 flex items-center justify-center gap-1.5"
+            style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.teal, background: "transparent" }}
+          >
+            OPEN FULL EXCEPTION QUEUE <ChevronRight size={12} />
+          </button>
+        </Panel>
+        <Panel className="p-4">
+          <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>Confidence, last 14 days</h3>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 2, marginBottom: 10 }}>
+            Fleet average. A falling line means evidence is decaying faster than it's being replaced.
+          </p>
+          <Sparkline data={trend} />
+          <div className="flex items-baseline justify-between mt-3">
+            <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>14D AGO {trend[0].value.toFixed(0)}%</span>
+            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: C.teal }}>{trend[trend.length - 1].value.toFixed(1)}%</span>
+          </div>
+        </Panel>
+        </div>
+      </div>
     </div>
   );
 }
 
-function KpiCard({ label, value, icon: Icon, accent = C.text }) {
+function StatusTile({ count, unit, label, sub, color, onClick }) {
   return (
-    <Panel className="p-4 flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <span style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{label}</span>
-        <Icon size={16} color={accent} />
+    <button
+      onClick={onClick}
+      className="text-left rounded-xl p-4 flex flex-col gap-1 h-full"
+      style={{ background: C.panel, border: `1px solid ${C.border}`, borderLeft: `3px solid ${color}` }}
+    >
+      <div className="flex items-baseline gap-1.5">
+        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 30, lineHeight: 1, color }}>{count}</span>
+        {unit && <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.textFaint }}>{unit}</span>}
       </div>
-      <span style={{ fontFamily: FONT_DISPLAY, color: accent, fontSize: 26 }}>{value}</span>
+      <span style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.text }}>{label}</span>
+      <span style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, lineHeight: 1.45 }}>{sub}</span>
+      <span className="mt-auto pt-2 flex items-center gap-1" style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.teal }}>
+        SEE THEM <ChevronRight size={10} />
+      </span>
+    </button>
+  );
+}
+
+/* Lanes and ports on an equirectangular frame. Positions are approximate —
+   this is a situational display, not a navigation chart. */
+function RouteMap({ shipments, skus }) {
+  const lanes = useMemo(() => {
+    const worstByShipment = {};
+    for (const s of skus) {
+      const cur = worstByShipment[s.shipmentId];
+      if (cur === undefined || s.confidence < cur) worstByShipment[s.shipmentId] = s.confidence;
+    }
+    return shipments
+      .filter((s) => PORT_COORDS[s.origin] && PORT_COORDS[s.destination])
+      .map((s) => ({ ...s, worst: worstByShipment[s.id] ?? 100 }))
+      .sort((a, b) => a.worst - b.worst)
+      .slice(0, 22);
+  }, [shipments, skus]);
+
+  const px = (lon) => lon + 180;
+  const py = (lat) => 90 - lat;
+
+  return (
+    <Panel className="p-0 overflow-hidden">
+      <div className="px-4 py-3 flex items-center justify-between gap-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
+        <div className="min-w-0">
+          <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>Where everything is right now</h3>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 2 }}>
+            22 busiest lanes, coloured by the weakest SKU on board.
+          </p>
+        </div>
+        <div className="hidden sm:flex gap-3 shrink-0">
+          {[["Clear", C.teal], ["Monitor", C.amber], ["Alert", C.coral]].map(([l, c]) => (
+            <span key={l} className="flex items-center gap-1.5" style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textMuted }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />{l}
+            </span>
+          ))}
+        </div>
+      </div>
+      <svg viewBox="0 25 360 100" style={{ width: "100%", display: "block", background: "#060B0F" }}>
+        {[-120, -60, 0, 60, 120].map((lon) => (
+          <line key={lon} x1={px(lon)} x2={px(lon)} y1={25} y2={125} stroke={C.borderSoft} strokeWidth={0.3} />
+        ))}
+        {[60, 30, 0, -30].map((lat) => (
+          <line key={lat} x1={0} x2={360} y1={py(lat)} y2={py(lat)} stroke={C.borderSoft} strokeWidth={0.3} />
+        ))}
+        <line x1={0} x2={360} y1={py(0)} y2={py(0)} stroke={C.border} strokeWidth={0.5} strokeDasharray="2 3" />
+
+        {lanes.map((s) => {
+          const [ax, ay] = [px(PORT_COORDS[s.origin][0]), py(PORT_COORDS[s.origin][1])];
+          const [bx, by] = [px(PORT_COORDS[s.destination][0]), py(PORT_COORDS[s.destination][1])];
+          const risk = riskFromConfidence(s.worst);
+          const color = RISK_META[risk].color;
+          const mx = (ax + bx) / 2;
+          const my = (ay + by) / 2 - Math.abs(bx - ax) * 0.13;
+          return (
+            <path
+              key={s.id}
+              d={`M ${ax} ${ay} Q ${mx} ${my} ${bx} ${by}`}
+              fill="none"
+              stroke={color}
+              strokeWidth={risk === "alert" ? 0.8 : 0.5}
+              strokeOpacity={risk === "clear" ? 0.32 : 0.75}
+            />
+          );
+        })}
+
+        {Object.entries(PORT_COORDS).map(([name, [lon, lat]]) => (
+          <g key={name}>
+            <circle cx={px(lon)} cy={py(lat)} r={1.6} fill={C.teal} fillOpacity={0.9} />
+            <text
+              x={px(lon) + 3} y={py(lat) + 1.6}
+              fill={C.textMuted} fontSize={4} fontFamily="'IBM Plex Mono', monospace"
+            >
+              {name}
+            </text>
+          </g>
+        ))}
+      </svg>
     </Panel>
+  );
+}
+
+function Sparkline({ data }) {
+  const values = data.map((d) => d.value);
+  const min = Math.min(...values) - 1;
+  const max = Math.max(...values) + 1;
+  const pts = values.map((v, i) => [
+    (i / (values.length - 1)) * 100,
+    30 - ((v - min) / (max - min)) * 26,
+  ]);
+  const line = pts.map(([x, y], i) => `${i ? "L" : "M"} ${x.toFixed(2)} ${y.toFixed(2)}`).join(" ");
+  const area = `${line} L 100 32 L 0 32 Z`;
+  return (
+    <svg viewBox="0 0 100 34" preserveAspectRatio="none" style={{ width: "100%", height: 76, display: "block" }}>
+      <path d={area} fill={C.teal} fillOpacity={0.08} />
+      <path d={line} fill="none" stroke={C.teal} strokeWidth={0.9} vectorEffect="non-scaling-stroke" />
+      <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r={1.2} fill={C.teal} />
+    </svg>
   );
 }
 
@@ -810,8 +1047,9 @@ function InfoCell({ label, value, highlight }) {
 /* ---------------------------------------------------------
    EXCEPTIONS VIEW
 --------------------------------------------------------- */
-function ExceptionsView({ skus, onSelectSku }) {
+function ExceptionsView({ skus, onSelectSku, preset }) {
   const [filter, setFilter] = useState("alert");
+  const [causeFilter, setCauseFilter] = useState(null);
   const [urgencyFilter, setUrgencyFilter] = useState([]);
   const [slaFilter, setSlaFilter] = useState([]);
   const [perishableOnly, setPerishableOnly] = useState(false);
@@ -824,7 +1062,20 @@ function ExceptionsView({ skus, onSelectSku }) {
     setArr(arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val]);
   };
 
+  // Drill-downs from the control tower land here pre-filtered, so the
+  // number you clicked and the list you get are provably the same set.
+  useEffect(() => {
+    if (!preset) return;
+    setUrgencyFilter([]); setSlaFilter([]); setPerishableOnly(false); setLateOnly(false);
+    setCustomListInput("");
+    if (preset.key === "alert") { setFilter("alert"); setCauseFilter(null); setMinValue(""); setSortMode("priority"); }
+    if (preset.key === "customs") { setFilter("all"); setCauseFilter("customsHold"); setMinValue(""); setSortMode("priority"); }
+    if (preset.key === "highvalue") { setFilter("all"); setCauseFilter(null); setMinValue("20000"); setSortMode("priority"); }
+    if (preset.key === "all") { setFilter("all"); setCauseFilter(null); setMinValue(""); setSortMode("confidence"); }
+  }, [preset]);
+
   const clearFilters = () => {
+    setCauseFilter(null);
     setUrgencyFilter([]);
     setSlaFilter([]);
     setPerishableOnly(false);
@@ -839,6 +1090,7 @@ function ExceptionsView({ skus, onSelectSku }) {
     else if (filter === "monitor") list = skus.filter((s) => s.risk === "monitor");
     else list = skus.filter((s) => s.risk !== "clear"); // "All flagged" = monitor + alert only
 
+    if (causeFilter) list = list.filter((s) => s.timeline.some((e) => e.type === causeFilter));
     if (urgencyFilter.length > 0) list = list.filter((s) => urgencyFilter.includes(s.urgency));
     if (slaFilter.length > 0) list = list.filter((s) => slaFilter.includes(s.slaTier));
     if (perishableOnly) list = list.filter((s) => s.perishable);
@@ -847,14 +1099,14 @@ function ExceptionsView({ skus, onSelectSku }) {
     if (minValue !== "" && !Number.isNaN(minV)) list = list.filter((s) => s.value >= minV);
     const customTerms = customListInput.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
     if (customTerms.length > 0) {
-      list = list.filter((s) => customTerms.some((t) => s.id.toLowerCase().includes(t) || s.customer.toLowerCase().includes(t)));
+      list = list.filter((s) => customTerms.some((t) => s.id.toLowerCase().includes(t) || (s.customer || "").toLowerCase().includes(t)));
     }
 
     const sorted = [...list].sort((a, b) =>
       sortMode === "priority" ? b.priorityScore - a.priorityScore : a.confidence - b.confidence
     );
     return sorted.slice(0, 60);
-  }, [skus, filter, urgencyFilter, slaFilter, perishableOnly, lateOnly, minValue, customListInput, sortMode]);
+  }, [skus, filter, causeFilter, urgencyFilter, slaFilter, perishableOnly, lateOnly, minValue, customListInput, sortMode]);
 
   const tabs = [
     { key: "alert", label: "Alert" },
@@ -919,6 +1171,14 @@ function ExceptionsView({ skus, onSelectSku }) {
             ))}
           </div>
           <div className="flex flex-wrap gap-2 items-center">
+            <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint, minWidth: 62 }}>CAUSE</span>
+            {[["customsHold", "Customs hold"], ["missingScan", "Missing scan"], ["sealBroken", "Seal broken"], ["gpsAnomaly", "GPS anomaly"]].map(([k, l]) => (
+              <button key={k} onClick={() => setCauseFilter(causeFilter === k ? null : k)} className="px-2.5 py-1 rounded-full text-xs" style={chipStyle(causeFilter === k, C.coral)}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 items-center">
             <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint, minWidth: 62 }}>SLA TIER</span>
             {SLA_TIERS.map((t) => (
               <button key={t} onClick={() => toggleIn(slaFilter, setSlaFilter, t)} className="px-2.5 py-1 rounded-full text-xs" style={chipStyle(slaFilter.includes(t), C.teal)}>
@@ -962,15 +1222,15 @@ function ExceptionsView({ skus, onSelectSku }) {
           <table className="w-full text-sm" style={{ fontFamily: FONT_BODY, minWidth: 520 }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
-                <th className="pb-2 font-normal">SKU</th>
-                <th className="pb-2 font-normal">Customer</th>
-                <th className="pb-2 font-normal">Value</th>
-                <th className="pb-2 font-normal">Urgency</th>
-                <th className="pb-2 font-normal">SLA</th>
-                <th className="pb-2 font-normal">Container</th>
-                <th className="pb-2 font-normal">Confidence</th>
-                <th className="pb-2 font-normal">Risk</th>
-                <th className="pb-2 font-normal">Flagged for</th>
+                <th className="pb-2 pr-3 font-normal">SKU</th>
+                <th className="pb-2 pr-3 font-normal">Customer</th>
+                <th className="pb-2 pr-3 font-normal">Value</th>
+                <th className="pb-2 pr-3 font-normal">Urgency</th>
+                <th className="pb-2 pr-3 font-normal">SLA</th>
+                <th className="pb-2 pr-3 font-normal">Container</th>
+                <th className="pb-2 pr-3 font-normal">Confidence</th>
+                <th className="pb-2 pr-3 font-normal">Risk</th>
+                <th className="pb-2 pr-3 font-normal">Flagged for</th>
               </tr>
             </thead>
             <tbody>
@@ -979,23 +1239,37 @@ function ExceptionsView({ skus, onSelectSku }) {
                 const displayEvent = cause || s.timeline[s.timeline.length - 1];
                 const urgencyColor = s.urgency === "High" ? C.coral : s.urgency === "Medium" ? C.amber : C.textMuted;
                 return (
+                  <React.Fragment key={s.id}>
                   <tr
-                    key={s.id}
                     style={{ borderTop: `1px solid ${C.borderSoft}`, cursor: "pointer" }}
                     onClick={() => onSelectSku(s.id)}
                   >
-                    <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.text }}>{s.id}</td>
-                    <td className="py-2" style={{ color: C.textMuted }}>{s.customer}</td>
-                    <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>${s.value.toLocaleString()}</td>
-                    <td className="py-2" style={{ fontFamily: FONT_MONO, color: urgencyColor }}>
+                    <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: C.text }}>{s.id}</td>
+                    <td className="py-2 pr-3" style={{ color: s.customer ? C.textMuted : C.textFaint }}>{s.customer || "\u2014"}</td>
+                    <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>${s.value.toLocaleString()}</td>
+                    <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: urgencyColor }}>
                       {s.urgency}{s.isLate ? " · LATE" : ""}
                     </td>
-                    <td className="py-2" style={{ color: C.textMuted, fontSize: 12 }}>{s.slaTier}</td>
-                    <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>{s.containerId}</td>
-                    <td className="py-2" style={{ fontFamily: FONT_MONO, color: RISK_META[s.risk].color }}>{s.confidence.toFixed(0)}%</td>
-                    <td className="py-2"><RiskBadge risk={s.risk} /></td>
-                    <td className="py-2" style={{ color: C.textMuted, fontSize: 12 }}><Glossed text={displayEvent?.label} /></td>
+                    <td className="py-2 pr-3" style={{ color: C.textMuted, fontSize: 12 }}>{s.slaTier}</td>
+                    <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>{s.containerId}</td>
+                    <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: RISK_META[s.risk].color }}>{s.confidence.toFixed(0)}%</td>
+                    <td className="py-2 pr-3"><RiskBadge risk={s.risk} /></td>
+                    <td className="py-2 pr-3" style={{ color: C.textMuted, fontSize: 12 }}><Glossed text={displayEvent?.label} /></td>
                   </tr>
+                  <tr>
+                    <td colSpan={9} className="pb-2.5" style={{ paddingLeft: 2 }}>
+                      <div
+                        style={{
+                          fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted, lineHeight: 1.5,
+                          paddingLeft: 8, borderLeft: `2px solid ${RISK_META[s.risk].color}`, maxWidth: 620,
+                        }}
+                      >
+                        <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint }}>OPERATOR'S READ · </span>
+                        {operatorNote(s)}
+                      </div>
+                    </td>
+                  </tr>
+                  </React.Fragment>
                 );
               })}
             </tbody>
@@ -2264,6 +2538,7 @@ export default function App() {
   const data = useMemo(() => generateData(), []);
   const [tab, setTab] = useState("dashboard");
   const [selectedSkuId, setSelectedSkuId] = useState(null);
+  const [exceptionPreset, setExceptionPreset] = useState(null);
   const [mode, setMode] = useState("rule");
   const [weights, setWeights] = useState(DEFAULT_WEIGHTS);
   const [thresholds, setThresholds] = useState(DEFAULT_THRESHOLDS);
@@ -2345,6 +2620,11 @@ export default function App() {
     });
     return { shipments: data.shipments, skus, containers, thresholds };
   }, [data, mode, weights, thresholds, watchlist, sourceReliability, graceHours]);
+
+  const drillToExceptions = (key) => {
+    setExceptionPreset({ key, at: Date.now() });
+    setTab("exceptions");
+  };
 
   const goToSku = (skuId) => {
     setSelectedSkuId(skuId);
@@ -2467,13 +2747,13 @@ export default function App() {
       <main className="p-4 sm:p-6 max-w-6xl mx-auto">
         <TabIntro tab={tab} />
         {tab === "dashboard" && (
-          <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} />
+          <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} onDrill={drillToExceptions} />
         )}
         {tab === "search" && (
           <SearchView data={viewData} selectedId={selectedSkuId} onSelectId={setSelectedSkuId} />
         )}
         {tab === "exceptions" && (
-          <ExceptionsView skus={viewData.skus} onSelectSku={goToSku} />
+          <ExceptionsView skus={viewData.skus} onSelectSku={goToSku} preset={exceptionPreset} />
         )}
         {tab === "simulator" && (
           <WhatIfView skus={viewData.skus} mode={mode} weights={weights} thresholds={thresholds} sourceReliability={sourceReliability} />
