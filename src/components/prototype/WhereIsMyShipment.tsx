@@ -886,7 +886,9 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill, mode
         </div>
       )}
 
-      {/* --- asymmetric body: map dominates, queue rides alongside --- */}
+      {modeBar}
+
+
       <div className="grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-4 items-start">
         <div className="flex flex-col gap-4 min-w-0">
           <RouteMap shipments={shipments} skus={skus} />
