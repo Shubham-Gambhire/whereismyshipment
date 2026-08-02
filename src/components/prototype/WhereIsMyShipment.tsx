@@ -755,7 +755,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku }) {
         <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }} className="mb-4">
           Shipments in transit
         </h3>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table className="w-full text-sm" style={{ fontFamily: FONT_BODY }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
@@ -958,7 +958,7 @@ function ExceptionsView({ skus, onSelectSku }) {
       </Panel>
 
       <Panel className="p-5">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table className="w-full text-sm" style={{ fontFamily: FONT_BODY }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
@@ -1735,7 +1735,7 @@ function IntegrationsView({ skus }) {
           <Database size={16} color={C.amber} />
           <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }}>ERP reconciliation (simulated SAP/Oracle sync)</h3>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table className="w-full text-sm" style={{ fontFamily: FONT_BODY }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
@@ -1989,7 +1989,7 @@ function LogicView({ weights, thresholds }) {
           adjustment factor — a stand-in for what a real historical-outcomes analysis might conclude, since
           no such analysis exists yet. The table below shows both, using your current Settings:
         </p>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table className="w-full text-sm" style={{ fontFamily: FONT_BODY }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
@@ -2463,7 +2463,7 @@ export default function App() {
       </header>
 
 
-      <main className="p-6 max-w-6xl mx-auto">
+      <main className="p-4 sm:p-6 max-w-6xl mx-auto">
         <TabIntro tab={tab} />
         {tab === "dashboard" && (
           <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} />
