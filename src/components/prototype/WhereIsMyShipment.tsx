@@ -10,7 +10,7 @@ import {
   Gauge, Radio, Container as ContainerIcon,
   HelpCircle, XCircle, CircleDollarSign, Layers, Scale, TrendingDown,
   Bell, Satellite, Database, RotateCcw, PlayCircle, Sliders, X, CheckCircle2,
-  Settings, CloudRain, MapPinned, Clock, Home
+  Settings, CloudRain, MapPinned, Clock
 } from "lucide-react";
 import { Glossed, Term, ConfidenceAdvice, ReadThisFirst, TabIntro } from "./Onboarding";
 
