@@ -194,7 +194,7 @@ const OPERATOR_NOTES = {
   customsHold: "Customs hold. Most of these clear in 48\u201372h. Only escalate if it's a contractual line or perishable.",
   missingScan: "Nine times out of ten this is terminal reporting lag, not a lost box. Chase the terminal before you chase the customer.",
   gpsAnomaly: "The tracker is drifting, not the container. Cross-check the carrier feed before you tell anyone anything.",
-  dataConflict: "Two systems disagree. That's a sync problem, not a cargo problem, reconcile it, don't escalate it.",
+  dataConflict: "Two systems disagree. That's a sync problem, not a cargo problem. Reconcile it, don't escalate it.",
   timestampAnomaly: "Event logged out of sequence. Data quality issue; the physical move is probably fine.",
   customsHoldLate: "Customs hold on an already-late box. Assume the date is gone and re-plan.",
   weather: "Weather slip. Re-issue the ETA; expediting buys you nothing against a storm.",
@@ -211,7 +211,7 @@ function operatorNote(sku) {
   if (key === "customsHold" && sku.isLate) return OPERATOR_NOTES.customsHoldLate;
   const base = OPERATOR_NOTES[key];
   if (base) return base;
-  if (sku.confidence < 60) return "No single clear cause, evidence has just thinned out across the chain. Treat the date as unsafe.";
+  if (sku.confidence < 60) return "No single clear cause. Evidence has just thinned out across the chain. Treat the date as unsafe.";
   return "Nothing dramatic here. Watch it for another 24h before doing anything.";
 }
 
