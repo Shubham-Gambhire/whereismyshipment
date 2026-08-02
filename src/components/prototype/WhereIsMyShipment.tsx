@@ -1484,7 +1484,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                       <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint, letterSpacing: 0.8 }}>
                         PROJECTED{simEvents.length > 0 ? ` · ${simEvents.length} applied` : ""}
                       </span>
-                      <ConfidenceGauge value={finalConfidence} thresholds={thresholds} timeline={simTimeline} />
+                      <ConfidenceGauge value={finalConfidence} thresholds={thresholds} timeline={previewTimeline} />
                     </div>
                   </div>
 
