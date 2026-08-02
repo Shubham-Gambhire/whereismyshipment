@@ -10,7 +10,7 @@ import {
   Gauge, Radio, Container as ContainerIcon,
   HelpCircle, XCircle, CircleDollarSign, Layers, Scale, TrendingDown,
   Bell, Satellite, Database, RotateCcw, PlayCircle, Sliders, X, CheckCircle2,
-  Settings, CloudRain, MapPinned, Clock, Home
+  Settings, CloudRain, MapPinned, Clock
 } from "lucide-react";
 import { Glossed, Term, ConfidenceAdvice, ReadThisFirst, TabIntro } from "./Onboarding";
 
@@ -762,7 +762,7 @@ function Panel({ children, style, className = "" }) {
    Status strip -> map + priority queue -> event stream + trend.
    Every number in the strip is a filter, not a decoration.
 --------------------------------------------------------- */
-function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
+function DashboardView({ shipments, containers, skus, onSelectSku, onDrill, modeBar }) {
   const kpis = useMemo(() => {
     const avgConfidence = skus.reduce((a, s) => a + s.confidence, 0) / skus.length;
     const needAttention = new Set(skus.filter((s) => s.risk === "alert").map((s) => s.containerId)).size;
@@ -886,7 +886,9 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
         </div>
       )}
 
-      {/* --- asymmetric body: map dominates, queue rides alongside --- */}
+      {modeBar}
+
+
       <div className="grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-4 items-start">
         <div className="flex flex-col gap-4 min-w-0">
           <RouteMap shipments={shipments} skus={skus} />
@@ -1077,8 +1079,8 @@ function ModeBar({ mode, active, alt, onSwitch, onExplain }) {
   const isRule = mode === "rule";
   return (
     <div
-      className="max-w-[1440px] mx-auto px-3 sm:px-5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1"
-      style={{ borderBottom: `1px solid ${C.borderSoft}`, fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted }}
+      className="rounded-md px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1"
+      style={{ background: C.panel, border: `1px solid ${C.borderSoft}`, fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted }}
     >
       <span style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 0.6, color: isRule ? C.teal : C.amber }}>
         SCORING · {isRule ? "RULE-BASED" : "CALIBRATED"}
@@ -2503,6 +2505,7 @@ function LogicView({ weights, thresholds }) {
       </Panel>
 
       {/* Weights + mode comparison */}
+      <span id="logic-event-weights" aria-hidden="true" style={{ display: "block", scrollMarginTop: 96 }} />
       <Panel className="p-6">
         <div className="flex items-center gap-2 mb-1">
           <Sliders size={16} color={C.amber} />
@@ -2895,6 +2898,16 @@ export default function App() {
     setTab("search");
   };
 
+  const goToWeightsLogic = () => {
+    setTab("logic");
+    // wait for the Logic tab to mount before scrolling to the weights section
+    setTimeout(() => {
+      document
+        .getElementById("logic-event-weights")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  };
+
   const TABS = [
     { key: "dashboard", label: "Overview", icon: Gauge },
     { key: "search", label: "SKU", icon: Search },
@@ -2947,20 +2960,19 @@ export default function App() {
           <div className="flex items-center gap-2.5 min-w-0">
             <button
               onClick={() => setTab("dashboard")}
-              className="flex items-center gap-1.5 shrink-0 px-2 py-1 rounded-md"
-              style={{
-                fontFamily: FONT_MONO,
-                fontSize: 10.5,
-                letterSpacing: 0.5,
-                color: tab === "dashboard" ? C.text : C.textMuted,
-                background: "transparent",
-                border: `1px solid ${C.border}`,
-                cursor: "pointer",
-              }}
-              aria-label="Back to Overview"
+              className="flex items-center gap-2 shrink-0"
+              style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
+              aria-label="Where Is My Shipment — back to Overview"
             >
-              <Home size={12} /> HOME
+              <Anchor size={16} color={C.teal} className="logo-bob" style={{ animation: "logo-bob 4s ease-in-out infinite" }} />
+              <span
+                className="whitespace-nowrap"
+                style={{ fontFamily: FONT_DISPLAY, fontSize: 12.5, fontWeight: 600, color: C.text, letterSpacing: 0.2 }}
+              >
+                Where Is My Shipment
+              </span>
             </button>
+            <span className="hidden sm:inline" style={{ width: 1, height: 14, background: C.border }} />
             <span
               className="hidden sm:inline truncate"
               style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: 0.3 }}
@@ -3011,21 +3023,23 @@ export default function App() {
         </div>
       </header>
 
-      {tab === "dashboard" && (
-        <ModeBar
-          mode={mode}
-          active={viewData}
-          alt={altData}
-          onSwitch={() => setMode(altMode)}
-          onExplain={() => setTab("logic")}
-        />
-      )}
-
       <main className="px-3 sm:px-5 py-4 max-w-[1440px] mx-auto">
         {tab === "dashboard" && <BrandMark />}
         <TabIntro tab={tab} />
         {tab === "dashboard" && (
-          <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} onDrill={drillToExceptions} />
+          <DashboardView
+            shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus}
+            onSelectSku={goToSku} onDrill={drillToExceptions}
+            modeBar={
+              <ModeBar
+                mode={mode}
+                active={viewData}
+                alt={altData}
+                onSwitch={() => setMode(altMode)}
+                onExplain={goToWeightsLogic}
+              />
+            }
+          />
         )}
         {tab === "search" && (
           <SearchView data={viewData} selectedId={selectedSkuId} onSelectId={setSelectedSkuId} />
