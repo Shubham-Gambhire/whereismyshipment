@@ -61,6 +61,8 @@ export function Walkthrough() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const current = screens[active] ?? screens[0]!;
+
   return (
     <Section
       id="walkthrough"
@@ -92,7 +94,7 @@ export function Walkthrough() {
           </ol>
 
           <div className="min-w-0 flex-1">
-            <BrowserFrame url={`where-is-my-shipment.app/${screens[active].key}`}>
+            <BrowserFrame url={`where-is-my-shipment.app/${current.key}`}>
               <div className="relative min-h-[300px] md:min-h-[420px]">
                 {screens.map((s, i) => (
                   <div
@@ -112,7 +114,7 @@ export function Walkthrough() {
                 ))}
               </div>
             </BrowserFrame>
-            <p className="mt-4 font-mono text-[11px] text-text-faint">{screens[active].note}</p>
+            <p className="mt-4 font-mono text-[11px] text-text-faint">{current.note}</p>
           </div>
         </div>
       </div>
