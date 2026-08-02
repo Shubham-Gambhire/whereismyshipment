@@ -1,6 +1,6 @@
 // @ts-nocheck
 /* eslint-disable */
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -758,7 +758,7 @@ function Panel({ children, style, className = "" }) {
 }
 
 /* ---------------------------------------------------------
-   CONTROL TOWER (DASHBOARD)
+   OVERVIEW (DASHBOARD)
    Status strip -> map + priority queue -> event stream + trend.
    Every number in the strip is a filter, not a decoration.
 --------------------------------------------------------- */
@@ -2612,7 +2612,7 @@ export default function App() {
   const [sourceReliability, setSourceReliability] = useState(DEFAULT_SOURCE_RELIABILITY);
   const [graceHours, setGraceHours] = useState(DEFAULT_GRACE_HOURS);
 
-  const viewData = useMemo(() => {
+  const derive = useCallback((mode) => {
     const shipmentById = Object.fromEntries(data.shipments.map((s) => [s.id, s]));
 
     // A shipment "touches" the watchlist if its origin or destination
@@ -2685,7 +2685,11 @@ export default function App() {
       return { ...c, timeline, confidence };
     });
     return { shipments: data.shipments, skus, containers, thresholds };
-  }, [data, mode, weights, thresholds, watchlist, sourceReliability, graceHours]);
+  }, [data, weights, thresholds, watchlist, sourceReliability, graceHours]);
+
+  const viewData = useMemo(() => derive(mode), [derive, mode]);
+  const altMode = mode === "rule" ? "calibrated" : "rule";
+  const altData = useMemo(() => derive(altMode), [derive, altMode]);
 
   const drillToExceptions = (key) => {
     setExceptionPreset({ key, at: Date.now() });
@@ -2698,7 +2702,7 @@ export default function App() {
   };
 
   const TABS = [
-    { key: "dashboard", label: "Control Tower", icon: Gauge },
+    { key: "dashboard", label: "Overview", icon: Gauge },
     { key: "search", label: "SKU", icon: Search },
     { key: "exceptions", label: "Exceptions", icon: AlertTriangle },
     { key: "simulator", label: "Simulator", icon: PlayCircle },
@@ -2719,8 +2723,25 @@ export default function App() {
           80% { transform: scale(2.2); opacity: 0; }
           100% { opacity: 0; }
         }
+        @keyframes live-blink {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.25; transform: scale(0.75); }
+        }
+        @keyframes live-halo {
+          0% { transform: scale(0.6); opacity: 0.55; }
+          70% { transform: scale(2.6); opacity: 0; }
+          100% { opacity: 0; }
+        }
+        @keyframes logo-sweep {
+          0% { transform: translateX(-100%); }
+          55%, 100% { transform: translateX(240%); }
+        }
+        @keyframes logo-bob {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-1.5px); }
+        }
         @media (prefers-reduced-motion: reduce) {
-          .sonar-ping { animation: none !important; }
+          .sonar-ping, .live-dot, .live-halo, .logo-sweep, .logo-bob { animation: none !important; }
         }
       `}</style>
 
@@ -2730,17 +2751,38 @@ export default function App() {
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span
-              className="grid place-items-center shrink-0"
-              style={{ width: 22, height: 22, borderRadius: 4, background: C.tealDim, border: `1px solid ${C.teal}55` }}
-            >
-              <Anchor size={12} color={C.teal} />
+            <span className="relative grid place-items-center shrink-0" style={{ width: 34, height: 34 }}>
+              <span
+                className="live-halo absolute inset-0 rounded-lg"
+                style={{ border: `1px solid ${C.teal}`, animation: "live-halo 3.2s ease-out infinite" }}
+              />
+              <span
+                className="grid place-items-center"
+                style={{ width: 34, height: 34, borderRadius: 8, background: C.tealDim, border: `1px solid ${C.teal}55` }}
+              >
+                <Anchor size={19} color={C.teal} className="logo-bob" style={{ animation: "logo-bob 4s ease-in-out infinite" }} />
+              </span>
             </span>
-            <span
-              style={{ fontFamily: FONT_DISPLAY, fontSize: 13.5, fontWeight: 600, letterSpacing: -0.1 }}
-              className="truncate"
-            >
-              Where Is My Shipment
+            <span className="min-w-0">
+              <span
+                style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 600, letterSpacing: -0.2, display: "block" }}
+                className="truncate"
+              >
+                Where Is My Shipment
+              </span>
+              <span
+                className="relative block overflow-hidden"
+                style={{ height: 1.5, marginTop: 3, background: C.borderSoft, borderRadius: 1 }}
+              >
+                <span
+                  className="logo-sweep absolute inset-y-0"
+                  style={{
+                    width: "42%",
+                    background: `linear-gradient(90deg, transparent, ${C.teal}, transparent)`,
+                    animation: "logo-sweep 3.6s cubic-bezier(0.45,0,0.2,1) infinite",
+                  }}
+                />
+              </span>
             </span>
             <span className="hidden sm:inline" style={{ width: 1, height: 14, background: C.border }} />
             <span
@@ -2853,7 +2895,6 @@ export default function App() {
         className="max-w-[1440px] mx-auto px-3 sm:px-5 py-5 flex flex-wrap items-center justify-between gap-2"
         style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, borderTop: `1px solid ${C.borderSoft}` }}
       >
-        <span>Rule-based confidence engine · what-if simulator · illustrative AIS/EDI feeds · synthetic data only</span>
         <span className="flex items-center gap-3">
           <span>Built by Shubham Gambhire</span>
           <a href="https://github.com/shubhamgambhire" target="_blank" rel="noreferrer" style={{ color: C.textMuted, textDecoration: "none" }}>
