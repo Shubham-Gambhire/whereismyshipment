@@ -1306,6 +1306,8 @@ function ExceptionsView({ skus, onSelectSku, preset }) {
   }, [preset]);
 
   const clearFilters = () => {
+    setFilter("alert");
+    setSortMode("confidence");
     setCauseFilter(null);
     setUrgencyFilter([]);
     setSlaFilter([]);
@@ -1314,6 +1316,7 @@ function ExceptionsView({ skus, onSelectSku, preset }) {
     setMinValue("");
     setCustomListInput("");
   };
+
 
   const filtered = useMemo(() => {
     let list;
