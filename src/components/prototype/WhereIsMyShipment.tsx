@@ -1646,27 +1646,29 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
         <div className="md:col-span-3 flex flex-col gap-5">
           {sku && (
             <>
-              <Panel className="p-6">
-                <div className="flex flex-wrap items-start justify-between gap-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 min-w-0 flex-1">
-                    <div className="flex flex-col gap-1 min-w-0">
-                      <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint, letterSpacing: 0.8 }}>CURRENT</span>
-                      <ConfidenceGauge value={sku.confidence} thresholds={thresholds} timeline={sku.timeline} />
-                    </div>
-                    <div className="flex flex-col gap-1 min-w-0">
-                      <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint, letterSpacing: 0.8 }}>
-                        PROJECTED{simEvents.length > 0 ? ` · ${simEvents.length} applied` : ""}
-                      </span>
-                      <ConfidenceGauge value={finalConfidence} thresholds={thresholds} timeline={previewTimeline} />
-                    </div>
+              <Panel className="p-4 sm:p-6">
+                <div
+                  className="flex flex-wrap items-center gap-x-3 gap-y-2 pb-3 mb-4"
+                  style={{ borderBottom: `1px solid ${C.borderSoft}` }}
+                >
+                  <span className="truncate" style={{ fontFamily: FONT_MONO, fontSize: 13, color: C.text }}>{sku.id}</span>
+                  <span className="truncate" style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.textMuted }}>{sku.customer}</span>
+                  <span className="ml-auto"><RiskBadge risk={finalRisk} /></span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 min-w-0">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint, letterSpacing: 0.8 }}>CURRENT</span>
+                    <ConfidenceGauge value={sku.confidence} thresholds={thresholds} timeline={sku.timeline} />
                   </div>
-
-                  <div className="flex flex-col gap-2 items-start">
-                    <RiskBadge risk={finalRisk} />
-                    <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: C.textMuted }}>{sku.id} · {sku.customer}</span>
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint, letterSpacing: 0.8 }}>
+                      PROJECTED{simEvents.length > 0 ? ` · ${simEvents.length} applied` : ""}
+                    </span>
+                    <ConfidenceGauge value={finalConfidence} thresholds={thresholds} timeline={previewTimeline} />
                   </div>
                 </div>
               </Panel>
+
 
               <Panel className="p-6">
                 <div className="flex items-center justify-between mb-4">
