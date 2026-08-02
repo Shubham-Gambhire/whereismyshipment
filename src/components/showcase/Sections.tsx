@@ -1,3 +1,4 @@
+import { Database, Factory, Gauge, Lightbulb, ShieldAlert, Waypoints, Workflow } from "lucide-react";
 import { Panel, Reveal, Section, useInView } from "./primitives";
 
 const steps = [
@@ -161,6 +162,104 @@ export function Highlights() {
                 <h3 className="text-base font-medium text-foreground">{title}</h3>
               </div>
               <p className="mt-2 pl-8 text-sm leading-relaxed text-muted-foreground">{body}</p>
+            </Panel>
+          </Reveal>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+const phases = [
+  {
+    icon: Database,
+    n: "01",
+    title: "Data integration",
+    body: "Carrier EDI, terminal operating systems, customs filings, AIS vessel positions and container GPS feeds. The prototype shows the shape of this layer with synthetic data; production would map each source to a canonical event schema.",
+  },
+  {
+    icon: Gauge,
+    n: "02",
+    title: "Model validation",
+    body: "Run the confidence score against historical outcomes: which dips actually preceded a late delivery? Use that feedback to recalibrate weights and retire rules that only look predictive.",
+  },
+  {
+    icon: Factory,
+    n: "03",
+    title: "Scale",
+    body: "Move from in-browser state to event streaming and materialized SKU-level views. At 50k+ SKUs the engine must be incremental, not a full recompute on every update.",
+  },
+  {
+    icon: Workflow,
+    n: "04",
+    title: "Decision hooks",
+    body: "Connect exceptions to ERP allocation rules, customer-alert workflows and expedite-approval thresholds so the score drives action, not just attention.",
+  },
+];
+
+export function Implementation() {
+  return (
+    <Section
+      id="implementation"
+      eyebrow="From prototype to production"
+      title="What it would take to make this real"
+      intro="The prototype proves the reasoning; production is about data plumbing, validation and connecting the score to operational decisions."
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        {phases.map((p, i) => (
+          <Reveal key={p.title} delay={i * 80}>
+            <Panel hover className="h-full p-6">
+              <div className="flex items-start gap-4">
+                <span className="rounded-xl border border-teal-dim bg-teal/10 p-2.5">
+                  <p.icon className="size-4 text-teal" />
+                </span>
+                <div>
+                  <span className="font-mono text-[10px] text-text-faint">{p.n}</span>
+                  <h3 className="mt-1 text-base font-medium text-foreground">{p.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.body}</p>
+                </div>
+              </div>
+            </Panel>
+          </Reveal>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+const limitations = [
+  {
+    icon: ShieldAlert,
+    title: "Synthetic data only",
+    body: "No real carrier, customer or terminal data. The event patterns are plausible, not proven.",
+  },
+  {
+    icon: Waypoints,
+    title: "Rule-based weights",
+    body: "Confidence deltas are manually set. They need backtesting against historical miss rates before they can guide real decisions.",
+  },
+  {
+    icon: Lightbulb,
+    title: "No cost model yet",
+    body: "The score flags risk, but it doesn't yet weigh expedite cost against delay cost or inventory impact.",
+  },
+];
+
+export function Limitations() {
+  return (
+    <Section
+      id="limitations"
+      eyebrow="What this doesn't do yet"
+      title="Honest gaps, and what I'd do differently"
+      intro="Naming the limitations is part of the consulting mindset. The next iteration would start with a real carrier sample, build a feedback loop, and add a cost-aware recommendation layer."
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        {limitations.map((l, i) => (
+          <Reveal key={l.title} delay={i * 80}>
+            <Panel className="h-full p-6">
+              <l.icon className="size-5 text-coral" />
+              <h3 className="mt-4 text-base font-medium text-foreground">{l.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{l.body}</p>
             </Panel>
           </Reveal>
         ))}
