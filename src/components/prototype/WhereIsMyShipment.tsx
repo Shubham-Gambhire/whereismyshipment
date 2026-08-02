@@ -2802,7 +2802,7 @@ export default function App() {
 
 
 
-      <main className="p-4 sm:p-6 max-w-6xl mx-auto">
+      <main className="px-3 sm:px-5 py-4 max-w-[1440px] mx-auto">
         <TabIntro tab={tab} />
         {tab === "dashboard" && (
           <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} onDrill={drillToExceptions} />
@@ -2832,9 +2832,19 @@ export default function App() {
         {tab === "logic" && <LogicView weights={weights} thresholds={thresholds} />}
       </main>
 
-      <footer className="px-6 py-6 text-center" style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>
-        MVP prototype — rule-based confidence engine with adjustable weights, a simulated calibration mode, what-if simulator, and illustrative AIS/ERP integrations. Synthetic data only.
+      <footer
+        className="max-w-[1440px] mx-auto px-3 sm:px-5 py-5 flex flex-wrap items-center justify-between gap-2"
+        style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, borderTop: `1px solid ${C.borderSoft}` }}
+      >
+        <span>Rule-based confidence engine · what-if simulator · illustrative AIS/EDI feeds · synthetic data only</span>
+        <span className="flex items-center gap-3">
+          <span>Built by Shubham Gambhire</span>
+          <a href="https://github.com/shubhamgambhire" target="_blank" rel="noreferrer" style={{ color: C.textMuted, textDecoration: "none" }}>
+            GitHub ↗
+          </a>
+        </span>
       </footer>
+
     </div>
   );
 }
