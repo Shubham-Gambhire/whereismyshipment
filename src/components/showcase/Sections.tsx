@@ -1,3 +1,4 @@
+import { Database, Factory, Gauge, Lightbulb, ShieldAlert, Waypoints, Workflow } from "lucide-react";
 import { Panel, Reveal, Section, useInView } from "./primitives";
 
 const steps = [
