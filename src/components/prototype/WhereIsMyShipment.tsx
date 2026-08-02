@@ -713,7 +713,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku }) {
         <KpiCard label="Late Shipments" value={kpis.lateShipments} icon={Clock} accent={C.amber} />
       </div>
 
-      <div className="grid md:grid-cols-5 gap-4">
+      <div className="grid md:grid-cols-5 gap-4 min-w-0">
         <Panel className="p-5 md:col-span-3">
           <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }} className="mb-4">
             Average confidence by category
@@ -1104,8 +1104,8 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
         </div>
       </Panel>
 
-      <div className="grid md:grid-cols-5 gap-5">
-        <div className="md:col-span-2 flex flex-col gap-3">
+      <div className="grid md:grid-cols-5 gap-5 min-w-0">
+        <div className="md:col-span-2 flex flex-col gap-3 min-w-0">
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" color={C.textMuted} />
             <input
@@ -2521,8 +2521,8 @@ function SearchView({ data, selectedId, onSelectId }) {
   const shipment = selected ? shipments.find((s) => s.id === selected.shipmentId) : null;
 
   return (
-    <div className="grid md:grid-cols-5 gap-5">
-      <div className="md:col-span-2 flex flex-col gap-3">
+    <div className="grid md:grid-cols-5 gap-5 min-w-0">
+      <div className="md:col-span-2 flex flex-col gap-3 min-w-0">
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" color={C.textMuted} />
           <input
