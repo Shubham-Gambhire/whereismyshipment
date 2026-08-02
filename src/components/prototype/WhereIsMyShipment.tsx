@@ -1079,8 +1079,8 @@ function ModeBar({ mode, active, alt, onSwitch, onExplain }) {
   const isRule = mode === "rule";
   return (
     <div
-      className="max-w-[1440px] mx-auto px-3 sm:px-5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1"
-      style={{ borderBottom: `1px solid ${C.borderSoft}`, fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted }}
+      className="rounded-md px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-1"
+      style={{ background: C.panel, border: `1px solid ${C.borderSoft}`, fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted }}
     >
       <span style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 0.6, color: isRule ? C.teal : C.amber }}>
         SCORING · {isRule ? "RULE-BASED" : "CALIBRATED"}
