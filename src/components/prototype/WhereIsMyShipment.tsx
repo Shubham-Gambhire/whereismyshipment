@@ -817,7 +817,34 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
       {/* --- asymmetric body: map dominates, queue rides alongside --- */}
       <div className="grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-4 items-start">
         <div className="flex flex-col gap-4 min-w-0">
-        <RouteMap shipments={shipments} skus={skus} />
+          <RouteMap shipments={shipments} skus={skus} />
+        <Panel className="p-0 overflow-hidden">
+          <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
+            <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>Coming in off the feeds</h3>
+          </div>
+          <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <table className="w-full" style={{ fontFamily: FONT_BODY, fontSize: 12, minWidth: 460 }}>
+              <tbody>
+                {recentEvents.map((e, i) => (
+                  <tr key={i} style={{ borderTop: i ? `1px solid ${C.borderSoft}` : "none" }}>
+                    <td className="px-4 py-1.5 whitespace-nowrap align-top" style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>
+                      {e.timestamp.toISOString().slice(5, 16).replace("T", " ")}
+                    </td>
+                    <td className="py-1.5 pr-3 align-top" style={{ color: C.text }}>
+                      <Glossed text={e.label} />
+                    </td>
+                    <td className="py-1.5 pr-3 whitespace-nowrap align-top" style={{ color: C.textMuted }}>{e.location}</td>
+                    <td className="py-1.5 pr-4 text-right whitespace-nowrap align-top" style={{ fontFamily: FONT_MONO, fontSize: 11, color: e.delta < 0 ? C.coral : C.textFaint }}>
+                      {e.delta < 0 ? e.delta : "\u2014"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+        </div>
+        <div className="flex flex-col gap-4 min-w-0">
         <Panel className="p-0 overflow-hidden">
           <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
             <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>What I'd chase first</h3>
@@ -861,36 +888,6 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
             OPEN FULL EXCEPTION QUEUE <ChevronRight size={12} />
           </button>
         </Panel>
-      </div>
-
-      {/* --- ground truth: what actually happened, and where the line is going --- */}
-      <div className="grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-4 items-start">
-        <Panel className="p-0 overflow-hidden">
-          <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
-            <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>Coming in off the feeds</h3>
-          </div>
-          <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
-            <table className="w-full" style={{ fontFamily: FONT_BODY, fontSize: 12, minWidth: 460 }}>
-              <tbody>
-                {recentEvents.map((e, i) => (
-                  <tr key={i} style={{ borderTop: i ? `1px solid ${C.borderSoft}` : "none" }}>
-                    <td className="px-4 py-1.5 whitespace-nowrap align-top" style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>
-                      {e.timestamp.toISOString().slice(5, 16).replace("T", " ")}
-                    </td>
-                    <td className="py-1.5 pr-3 align-top" style={{ color: C.text }}>
-                      <Glossed text={e.label} />
-                    </td>
-                    <td className="py-1.5 pr-3 whitespace-nowrap align-top" style={{ color: C.textMuted }}>{e.location}</td>
-                    <td className="py-1.5 pr-4 text-right whitespace-nowrap align-top" style={{ fontFamily: FONT_MONO, fontSize: 11, color: e.delta < 0 ? C.coral : C.textFaint }}>
-                      {e.delta < 0 ? e.delta : "\u2014"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
-
         <Panel className="p-4">
           <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>Confidence, last 14 days</h3>
           <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 2, marginBottom: 10 }}>
@@ -902,6 +899,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
             <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: C.teal }}>{trend[trend.length - 1].value.toFixed(1)}%</span>
           </div>
         </Panel>
+        </div>
       </div>
     </div>
   );
