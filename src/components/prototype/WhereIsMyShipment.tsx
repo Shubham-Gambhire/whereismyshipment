@@ -713,7 +713,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku }) {
         <KpiCard label="Late Shipments" value={kpis.lateShipments} icon={Clock} accent={C.amber} />
       </div>
 
-      <div className="grid md:grid-cols-5 gap-4">
+      <div className="grid md:grid-cols-5 gap-4 min-w-0">
         <Panel className="p-5 md:col-span-3">
           <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }} className="mb-4">
             Average confidence by category
@@ -755,8 +755,8 @@ function DashboardView({ shipments, containers, skus, onSelectSku }) {
         <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }} className="mb-4">
           Shipments in transit
         </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY }}>
+        <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY, minWidth: 520 }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
                 <th className="pb-2 font-normal">Shipment</th>
@@ -958,8 +958,8 @@ function ExceptionsView({ skus, onSelectSku }) {
       </Panel>
 
       <Panel className="p-5">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY }}>
+        <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY, minWidth: 520 }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
                 <th className="pb-2 font-normal">SKU</th>
@@ -1104,15 +1104,15 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
         </div>
       </Panel>
 
-      <div className="grid md:grid-cols-5 gap-5">
-        <div className="md:col-span-2 flex flex-col gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-5 min-w-0">
+        <div className="md:col-span-2 flex flex-col gap-3 min-w-0 w-full overflow-hidden">
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" color={C.textMuted} />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search SKU or customer…"
-              className="w-full pl-9 pr-3 py-2.5 rounded-lg outline-none text-sm"
+              className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-lg outline-none text-sm"
               style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
             />
           </div>
@@ -1127,10 +1127,11 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                   className="text-left p-3 rounded-lg flex items-center justify-between gap-2"
                   style={{ background: active ? C.panelAlt : C.panel, border: `1px solid ${active ? m.color : C.border}` }}
                 >
-                  <div className="flex flex-col gap-0.5">
-                    <span style={{ fontFamily: FONT_MONO, color: C.text, fontSize: 13 }}>{s.id}</span>
-                    <span style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.customer}</span>
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className="truncate" style={{ fontFamily: FONT_MONO, color: C.text, fontSize: 13 }}>{s.id}</span>
+                    <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.customer}</span>
                   </div>
+
                   <span style={{ fontFamily: FONT_MONO, color: m.color, fontSize: 13 }}>{s.confidence.toFixed(0)}%</span>
                 </button>
               );
@@ -1735,8 +1736,8 @@ function IntegrationsView({ skus }) {
           <Database size={16} color={C.amber} />
           <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }}>ERP reconciliation (simulated SAP/Oracle sync)</h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY }}>
+        <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY, minWidth: 520 }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
                 <th className="pb-2 font-normal">SKU</th>
@@ -1989,8 +1990,8 @@ function LogicView({ weights, thresholds }) {
           adjustment factor — a stand-in for what a real historical-outcomes analysis might conclude, since
           no such analysis exists yet. The table below shows both, using your current Settings:
         </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY }}>
+        <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY, minWidth: 520 }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
                 <th className="pb-2 font-normal">Event</th>
@@ -2463,7 +2464,7 @@ export default function App() {
       </header>
 
 
-      <main className="p-6 max-w-6xl mx-auto">
+      <main className="p-4 sm:p-6 max-w-6xl mx-auto">
         <TabIntro tab={tab} />
         {tab === "dashboard" && (
           <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} />
@@ -2521,8 +2522,8 @@ function SearchView({ data, selectedId, onSelectId }) {
   const shipment = selected ? shipments.find((s) => s.id === selected.shipmentId) : null;
 
   return (
-    <div className="grid md:grid-cols-5 gap-5">
-      <div className="md:col-span-2 flex flex-col gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-5 min-w-0">
+      <div className="md:col-span-2 flex flex-col gap-3 min-w-0 w-full overflow-hidden">
         <div className="relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" color={C.textMuted} />
           <input
@@ -2530,7 +2531,7 @@ function SearchView({ data, selectedId, onSelectId }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search SKU, customer, or category…"
             aria-label="Search SKU, customer, or category"
-            className="w-full pl-9 pr-3 py-2.5 rounded-lg outline-none text-sm"
+            className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-lg outline-none text-sm"
             style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
           />
         </div>
@@ -2548,10 +2549,11 @@ function SearchView({ data, selectedId, onSelectId }) {
                   border: `1px solid ${active ? m.color : C.border}`,
                 }}
               >
-                <div className="flex flex-col gap-0.5">
-                  <span style={{ fontFamily: FONT_MONO, color: C.text, fontSize: 13 }}>{s.id}</span>
-                  <span style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.customer}</span>
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="truncate" style={{ fontFamily: FONT_MONO, color: C.text, fontSize: 13 }}>{s.id}</span>
+                  <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.customer}</span>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <span style={{ fontFamily: FONT_MONO, color: m.color, fontSize: 13 }}>{s.confidence.toFixed(0)}%</span>
                   <ChevronRight size={14} color={C.textFaint} />
