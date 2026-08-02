@@ -2708,31 +2708,45 @@ export default function App() {
       `}</style>
 
       <header
-        className="sticky top-0 z-10 px-4 sm:px-6 py-3 flex flex-col gap-3"
-        style={{ background: "rgba(10,20,24,0.9)", backdropFilter: "blur(6px)", borderBottom: `1px solid ${C.border}` }}
+        className="sticky top-0 z-10 px-3 sm:px-5 pt-2 pb-0 flex flex-col gap-2"
+        style={{ background: "rgba(11,15,20,0.94)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${C.border}` }}
       >
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="relative flex items-center justify-center shrink-0" style={{ width: 30, height: 30 }}>
-              <span
-                className="sonar-ping absolute w-2.5 h-2.5 rounded-full"
-                style={{ background: C.teal, animation: "ping-slow 2.6s cubic-bezier(0,0,0.2,1) infinite" }}
-              />
-              <Anchor size={18} color={C.teal} />
-            </div>
-            <div className="min-w-0">
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 0.2 }} className="truncate">
-                Where is My Shipment
-              </div>
-              <div style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted }} className="truncate">
-                A probabilistic SKU location framework
-              </div>
-            </div>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span
+              className="grid place-items-center shrink-0"
+              style={{ width: 22, height: 22, borderRadius: 4, background: C.tealDim, border: `1px solid ${C.teal}55` }}
+            >
+              <Anchor size={12} color={C.teal} />
+            </span>
+            <span
+              style={{ fontFamily: FONT_DISPLAY, fontSize: 13.5, fontWeight: 600, letterSpacing: -0.1 }}
+              className="truncate"
+            >
+              Where Is My Shipment
+            </span>
+            <span className="hidden sm:inline" style={{ width: 1, height: 14, background: C.border }} />
+            <span
+              className="hidden sm:inline truncate"
+              style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: 0.3 }}
+            >
+              SKU location confidence · {data.shipments.length} shipments · {data.skus.length} SKUs · synthetic
+            </span>
           </div>
-          <div className="shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
+            <a
+              href="https://github.com/shubhamgambhire"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden sm:inline"
+              style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textMuted, textDecoration: "none" }}
+            >
+              GITHUB ↗
+            </a>
             <AlertsBell skus={viewData.skus} onSelectSku={goToSku} />
           </div>
         </div>
+
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin" }}>
           <div className="flex rounded-md overflow-hidden shrink-0" style={{ border: `1px solid ${C.border}` }}>
