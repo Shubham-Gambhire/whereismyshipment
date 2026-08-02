@@ -1106,12 +1106,17 @@ function Sparkline({ data }) {
 
 function InfoCell({ label, value, highlight }) {
   return (
-    <div className="p-3 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
-      <div style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 11 }}>{label}</div>
-      <div style={{ fontFamily: FONT_MONO, color: highlight ? C.coral : C.text, fontSize: 13, marginTop: 2 }}>{value}</div>
+    <div className="px-3 py-1.5" style={{ borderLeft: `1px solid ${C.borderSoft}` }}>
+      <div style={{ fontFamily: FONT_MONO, color: C.textFaint, fontSize: 9.5, letterSpacing: 0.6, textTransform: "uppercase" }}>
+        {label}
+      </div>
+      <div style={{ fontFamily: FONT_MONO, color: highlight ? C.coral : C.text, fontSize: 12, marginTop: 1, lineHeight: 1.35 }}>
+        {value}
+      </div>
     </div>
   );
 }
+
 
 /* ---------------------------------------------------------
    EXCEPTIONS VIEW
