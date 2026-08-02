@@ -2934,23 +2934,22 @@ function SearchView({ data, selectedId, onSelectId }) {
       <div className="min-w-0">
         {selected ? (
           <Panel className="p-4 flex flex-col gap-4">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span style={{ fontFamily: FONT_MONO, fontSize: 16, color: C.text }}>{selected.id}</span>
-                  <RiskBadge risk={selected.risk} />
+            <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,280px)] gap-4 items-start">
+              <div className="min-w-0 flex flex-col gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontFamily: FONT_MONO, fontSize: 16, color: C.text }}>{selected.id}</span>
+                    <RiskBadge risk={selected.risk} />
+                  </div>
+                  <span style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>
+                    {selected.description} · {selected.customer} · qty {selected.quantity} · ${selected.value.toLocaleString()}
+                  </span>
                 </div>
-                <span style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>
-                  {selected.description} · {selected.customer} · qty {selected.quantity} · ${selected.value.toLocaleString()}
-                </span>
-              </div>
-              <ConfidenceGauge value={selected.confidence} thresholds={thresholds} timeline={selected.timeline} />
-            </div>
 
-            <div
-              className="grid grid-cols-2 sm:grid-cols-4 gap-y-2 py-1"
-              style={{ borderTop: `1px solid ${C.borderSoft}`, borderBottom: `1px solid ${C.borderSoft}` }}
-            >
+                <div
+                  className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 py-1"
+                  style={{ borderTop: `1px solid ${C.borderSoft}`, borderBottom: `1px solid ${C.borderSoft}` }}
+                >
               <InfoCell label="Container" value={selected.containerId} />
               <InfoCell label="Pallet" value={selected.palletId} />
               <InfoCell label="Shipment" value={selected.shipmentId} />
@@ -2977,6 +2976,9 @@ function SearchView({ data, selectedId, onSelectId }) {
               {selected.perishable && (
                 <InfoCell label="Shelf Life" value={`${selected.shelfLifeDays} days`} highlight={selected.shelfLifeDays <= 14} />
               )}
+                </div>
+              </div>
+              <ConfidenceGauge value={selected.confidence} thresholds={thresholds} timeline={selected.timeline} />
             </div>
 
             <div>
