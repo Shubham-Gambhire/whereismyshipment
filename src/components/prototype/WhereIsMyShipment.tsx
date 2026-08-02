@@ -18,24 +18,24 @@ import { Glossed, Term, ConfidenceAdvice, TabIntro, ReadThisFirst } from "./Onbo
    DESIGN TOKENS
 --------------------------------------------------------- */
 const C = {
-  bg: "#0A1418",
-  panel: "#0F1F26",
-  panelAlt: "#152C35",
-  border: "#1E3841",
-  borderSoft: "#16292F",
-  teal: "#34D8C3",
-  tealDim: "#1B5C54",
-  amber: "#EFB13C",
+  bg: "#080D12",
+  panel: "#0E1821",
+  panelAlt: "#142631",
+  border: "#1E3342",
+  borderSoft: "#162630",
+  teal: "#2DD4BF",
+  tealDim: "#1A5C54",
+  amber: "#FBBF24",
   amberDim: "#5C4A22",
-  coral: "#EA5A4A",
+  coral: "#F87171",
   coralDim: "#5C2A24",
   text: "#E8F1F2",
   textMuted: "#7F9BA3",
   textFaint: "#4E6870",
 };
 
-const FONT_DISPLAY = "'Space Grotesk', sans-serif";
-const FONT_BODY = "'Inter', sans-serif";
+const FONT_DISPLAY = "'Sora', sans-serif";
+const FONT_BODY = "'Manrope', sans-serif";
 const FONT_MONO = "'IBM Plex Mono', monospace";
 
 /* ---------------------------------------------------------
