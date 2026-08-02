@@ -77,36 +77,36 @@
 :root {
   --radius: 0.875rem;
 
-  /* Where Is My Shipment palette */
-  --panel: oklch(0.229 0.026 227.8);
-  --panel-alt: oklch(0.279 0.033 225.4);
-  --border-soft: oklch(0.267 0.027 220);
-  --teal: oklch(0.797 0.132 182);
-  --teal-dim: oklch(0.432 0.066 183.5);
-  --amber: oklch(0.799 0.146 79.2);
-  --amber-dim: oklch(0.419 0.062 85.3);
-  --coral: oklch(0.653 0.181 29.2);
-  --coral-dim: oklch(0.352 0.075 28.5);
-  --text-faint: oklch(0.5 0.033 218.7);
+  /* Deep Harbor — refined supply-chain palette */
+  --panel: oklch(0.21 0.03 228);
+  --panel-alt: oklch(0.27 0.04 225);
+  --border-soft: oklch(0.27 0.045 225);
+  --teal: oklch(0.80 0.14 180);
+  --teal-dim: oklch(0.45 0.07 182);
+  --amber: oklch(0.82 0.15 78);
+  --amber-dim: oklch(0.42 0.06 80);
+  --coral: oklch(0.66 0.19 28);
+  --coral-dim: oklch(0.35 0.08 30);
+  --text-faint: oklch(0.50 0.03 219);
 
-  --background: oklch(0.184 0.017 225);
-  --foreground: oklch(0.952 0.01 204.9);
+  --background: oklch(0.15 0.015 230);
+  --foreground: oklch(0.95 0.01 205);
   --card: var(--panel);
   --card-foreground: var(--foreground);
   --popover: var(--panel-alt);
   --popover-foreground: var(--foreground);
   --primary: var(--teal);
-  --primary-foreground: oklch(0.184 0.017 225);
+  --primary-foreground: oklch(0.15 0.015 230);
   --secondary: var(--panel-alt);
   --secondary-foreground: var(--foreground);
   --muted: var(--panel-alt);
-  --muted-foreground: oklch(0.671 0.033 217);
+  --muted-foreground: oklch(0.67 0.03 218);
   --accent: var(--panel-alt);
   --accent-foreground: var(--foreground);
   --destructive: var(--coral);
-  --destructive-foreground: oklch(0.952 0.01 204.9);
-  --border: oklch(0.324 0.036 222.3);
-  --input: oklch(0.324 0.036 222.3);
+  --destructive-foreground: oklch(0.95 0.01 205);
+  --border: oklch(0.32 0.05 222);
+  --input: oklch(0.32 0.05 222);
   --ring: var(--teal);
   --chart-1: var(--teal);
   --chart-2: var(--amber);
@@ -116,10 +116,10 @@
   --sidebar: var(--panel);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--teal);
-  --sidebar-primary-foreground: oklch(0.184 0.017 225);
+  --sidebar-primary-foreground: oklch(0.15 0.015 230);
   --sidebar-accent: var(--panel-alt);
   --sidebar-accent-foreground: var(--foreground);
-  --sidebar-border: oklch(0.324 0.036 222.3);
+  --sidebar-border: oklch(0.32 0.05 222);
   --sidebar-ring: var(--teal);
 }
 
