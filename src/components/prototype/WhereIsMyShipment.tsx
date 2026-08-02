@@ -1034,8 +1034,9 @@ function InfoCell({ label, value, highlight }) {
 /* ---------------------------------------------------------
    EXCEPTIONS VIEW
 --------------------------------------------------------- */
-function ExceptionsView({ skus, onSelectSku }) {
+function ExceptionsView({ skus, onSelectSku, preset }) {
   const [filter, setFilter] = useState("alert");
+  const [causeFilter, setCauseFilter] = useState(null);
   const [urgencyFilter, setUrgencyFilter] = useState([]);
   const [slaFilter, setSlaFilter] = useState([]);
   const [perishableOnly, setPerishableOnly] = useState(false);
@@ -1048,7 +1049,20 @@ function ExceptionsView({ skus, onSelectSku }) {
     setArr(arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val]);
   };
 
+  // Drill-downs from the control tower land here pre-filtered, so the
+  // number you clicked and the list you get are provably the same set.
+  useEffect(() => {
+    if (!preset) return;
+    setUrgencyFilter([]); setSlaFilter([]); setPerishableOnly(false); setLateOnly(false);
+    setCustomListInput("");
+    if (preset.key === "alert") { setFilter("alert"); setCauseFilter(null); setMinValue(""); setSortMode("priority"); }
+    if (preset.key === "customs") { setFilter("all"); setCauseFilter("customsHold"); setMinValue(""); setSortMode("priority"); }
+    if (preset.key === "highvalue") { setFilter("all"); setCauseFilter(null); setMinValue("20000"); setSortMode("priority"); }
+    if (preset.key === "all") { setFilter("all"); setCauseFilter(null); setMinValue(""); setSortMode("confidence"); }
+  }, [preset]);
+
   const clearFilters = () => {
+    setCauseFilter(null);
     setUrgencyFilter([]);
     setSlaFilter([]);
     setPerishableOnly(false);
@@ -1063,6 +1077,7 @@ function ExceptionsView({ skus, onSelectSku }) {
     else if (filter === "monitor") list = skus.filter((s) => s.risk === "monitor");
     else list = skus.filter((s) => s.risk !== "clear"); // "All flagged" = monitor + alert only
 
+    if (causeFilter) list = list.filter((s) => s.timeline.some((e) => e.type === causeFilter));
     if (urgencyFilter.length > 0) list = list.filter((s) => urgencyFilter.includes(s.urgency));
     if (slaFilter.length > 0) list = list.filter((s) => slaFilter.includes(s.slaTier));
     if (perishableOnly) list = list.filter((s) => s.perishable);
@@ -1078,7 +1093,7 @@ function ExceptionsView({ skus, onSelectSku }) {
       sortMode === "priority" ? b.priorityScore - a.priorityScore : a.confidence - b.confidence
     );
     return sorted.slice(0, 60);
-  }, [skus, filter, urgencyFilter, slaFilter, perishableOnly, lateOnly, minValue, customListInput, sortMode]);
+  }, [skus, filter, causeFilter, urgencyFilter, slaFilter, perishableOnly, lateOnly, minValue, customListInput, sortMode]);
 
   const tabs = [
     { key: "alert", label: "Alert" },
@@ -1143,6 +1158,14 @@ function ExceptionsView({ skus, onSelectSku }) {
             ))}
           </div>
           <div className="flex flex-wrap gap-2 items-center">
+            <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint, minWidth: 62 }}>CAUSE</span>
+            {[["customsHold", "Customs hold"], ["missingScan", "Missing scan"], ["sealBroken", "Seal broken"], ["gpsAnomaly", "GPS anomaly"]].map(([k, l]) => (
+              <button key={k} onClick={() => setCauseFilter(causeFilter === k ? null : k)} className="px-2.5 py-1 rounded-full text-xs" style={chipStyle(causeFilter === k, C.coral)}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 items-center">
             <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint, minWidth: 62 }}>SLA TIER</span>
             {SLA_TIERS.map((t) => (
               <button key={t} onClick={() => toggleIn(slaFilter, setSlaFilter, t)} className="px-2.5 py-1 rounded-full text-xs" style={chipStyle(slaFilter.includes(t), C.teal)}>
@@ -1203,13 +1226,13 @@ function ExceptionsView({ skus, onSelectSku }) {
                 const displayEvent = cause || s.timeline[s.timeline.length - 1];
                 const urgencyColor = s.urgency === "High" ? C.coral : s.urgency === "Medium" ? C.amber : C.textMuted;
                 return (
+                  <React.Fragment key={s.id}>
                   <tr
-                    key={s.id}
                     style={{ borderTop: `1px solid ${C.borderSoft}`, cursor: "pointer" }}
                     onClick={() => onSelectSku(s.id)}
                   >
                     <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.text }}>{s.id}</td>
-                    <td className="py-2" style={{ color: C.textMuted }}>{s.customer}</td>
+                    <td className="py-2" style={{ color: s.customer ? C.textMuted : C.textFaint }}>{s.customer || "\u2014"}</td>
                     <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>${s.value.toLocaleString()}</td>
                     <td className="py-2" style={{ fontFamily: FONT_MONO, color: urgencyColor }}>
                       {s.urgency}{s.isLate ? " · LATE" : ""}
@@ -1220,6 +1243,20 @@ function ExceptionsView({ skus, onSelectSku }) {
                     <td className="py-2"><RiskBadge risk={s.risk} /></td>
                     <td className="py-2" style={{ color: C.textMuted, fontSize: 12 }}><Glossed text={displayEvent?.label} /></td>
                   </tr>
+                  <tr>
+                    <td colSpan={9} className="pb-2.5" style={{ paddingLeft: 2 }}>
+                      <div
+                        style={{
+                          fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted, lineHeight: 1.5,
+                          paddingLeft: 8, borderLeft: `2px solid ${RISK_META[s.risk].color}`, maxWidth: 620,
+                        }}
+                      >
+                        <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint }}>OPERATOR'S READ · </span>
+                        {operatorNote(s)}
+                      </div>
+                    </td>
+                  </tr>
+                  </React.Fragment>
                 );
               })}
             </tbody>
@@ -2488,6 +2525,7 @@ export default function App() {
   const data = useMemo(() => generateData(), []);
   const [tab, setTab] = useState("dashboard");
   const [selectedSkuId, setSelectedSkuId] = useState(null);
+  const [exceptionPreset, setExceptionPreset] = useState(null);
   const [mode, setMode] = useState("rule");
   const [weights, setWeights] = useState(DEFAULT_WEIGHTS);
   const [thresholds, setThresholds] = useState(DEFAULT_THRESHOLDS);
@@ -2569,6 +2607,11 @@ export default function App() {
     });
     return { shipments: data.shipments, skus, containers, thresholds };
   }, [data, mode, weights, thresholds, watchlist, sourceReliability, graceHours]);
+
+  const drillToExceptions = (key) => {
+    setExceptionPreset({ key, at: Date.now() });
+    setTab("exceptions");
+  };
 
   const goToSku = (skuId) => {
     setSelectedSkuId(skuId);
@@ -2691,13 +2734,13 @@ export default function App() {
       <main className="p-4 sm:p-6 max-w-6xl mx-auto">
         <TabIntro tab={tab} />
         {tab === "dashboard" && (
-          <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} />
+          <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} onDrill={drillToExceptions} />
         )}
         {tab === "search" && (
           <SearchView data={viewData} selectedId={selectedSkuId} onSelectId={setSelectedSkuId} />
         )}
         {tab === "exceptions" && (
-          <ExceptionsView skus={viewData.skus} onSelectSku={goToSku} />
+          <ExceptionsView skus={viewData.skus} onSelectSku={goToSku} preset={exceptionPreset} />
         )}
         {tab === "simulator" && (
           <WhatIfView skus={viewData.skus} mode={mode} weights={weights} thresholds={thresholds} sourceReliability={sourceReliability} />
