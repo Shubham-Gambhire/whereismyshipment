@@ -64,7 +64,7 @@ const weightedPick = (items, weights) => {
   return items[items.length - 1];
 };
 
-// Fixed reference "today" — shared by data generation and the confidence
+// Fixed reference "today", shared by data generation and the confidence
 // engine, so grace-window/lateness math stays stable rather than drifting
 // with the real wall-clock whenever the prototype happens to be opened.
 const NOW = new Date("2026-07-28T00:00:00Z");
@@ -79,7 +79,7 @@ const CUSTOMERS = ["Solstice Retail Co.", "Anchor Point Supplies", "Meridian App
   "Northgate Pharma", "Vantage Auto Parts"];
 const CATEGORIES = ["Electronics", "Apparel", "Furniture", "Automotive Parts",
   "Consumer Goods", "Pharmaceuticals", "Industrial Equipment"];
-// Rough per-unit price range by category — used to derive a $ value per SKU.
+// Rough per-unit price range by category, used to derive a $ value per SKU.
 const CATEGORY_UNIT_PRICE = {
   Electronics: [20, 300],
   Apparel: [5, 60],
@@ -99,7 +99,7 @@ const BARGE_PORTS = ["Rotterdam", "Antwerp", "Hamburg"];
 // The real ocean export/import milestone sequence (verified against DCSA's
 // shipping glossary, carrier vessel-schedule terminology, and India's
 // ICEGATE customs process, since global and India-specific customs
-// terminology differ — see the Logic tab glossary for both). `side`
+// terminology differ, see the Logic tab glossary for both). `side`
 // determines whether the event is shown at the origin port, in transit,
 // or at the destination port.
 const EVENT_SEQUENCE = [
@@ -137,35 +137,34 @@ const DISRUPTIONS = [
 // others are custody/visibility issues that don't necessarily change ETA.
 const SCHEDULE_IMPACT_DAYS = { delay: 3, weather: 2, customsHold: 6, sealBroken: 2 };
 
-// Recovery events — only used in the what-if simulator, to model a
+// Recovery events, only used in the what-if simulator, to model a
 // disruption getting resolved rather than only ever getting worse.
 const RECOVERY_EVENTS = [
   { key: "customsCleared", label: "Customs Cleared", delta: 10 },
   { key: "reScanConfirmed", label: "Re-scan Confirmed", delta: 8 },
 ];
 
-// Shared one-line reasoning for every tunable event type — used in both
+// Shared one-line reasoning for every tunable event type, used in both
 // the Settings weight editor and the Simulator, so the explanation is
 // consistent wherever the event shows up.
 const EVENT_REASONS = {
-  delay: "Routine and usually resolves on its own — a weak signal that anything is actually wrong with the SKU.",
-  weather: "Affects timing, not custody — the goods themselves almost certainly weren't touched.",
+  delay: "Routine and usually resolves on its own, a weak signal that anything is actually wrong with the SKU.",
+  weather: "Affects timing, not custody, the goods themselves almost certainly weren't touched.",
   gpsAnomaly: "A real visibility gap, but often just a sensor or connectivity glitch rather than proof of tampering.",
-  missingScan: "A process failure — someone skipped a checkpoint. Moderately concerning on its own.",
-  customsHold: "The container was physically opened and handled by a third party — a meaningfully stronger signal.",
-  sealBroken: "Direct physical evidence of unauthorized access — the strongest signal something may be missing.",
+  missingScan: "A process failure, someone skipped a checkpoint. Moderately concerning on its own.",
+  customsHold: "The container was physically opened and handled by a third party, a meaningfully stronger signal.",
+  sealBroken: "Direct physical evidence of unauthorized access, the strongest signal something may be missing.",
   hormuz: "A narrow strait where regional military tension has occasionally led to vessel seizures or GPS interference.",
-  gulfOfAden: "A known piracy corridor off the Somali coast — real risk of hijack, not just delay.",
+  gulfOfAden: "A known piracy corridor off the Somali coast, real risk of hijack, not just delay.",
   malacca: "The busiest strait in the world and a long-standing piracy hotspot, mostly small-scale theft.",
   redSea: "A corridor that has seen militia attacks on commercial shipping during periods of regional conflict.",
   watchlistTouch: "Origin or destination matches a location on your own compliance watchlist.",
-  customsCleared: "Models the container clearing an existing customs hold — confidence recovers accordingly.",
+  customsCleared: "Models the container clearing an existing customs hold, confidence recovers accordingly.",
   reScanConfirmed: "Models a missing or flagged scan getting reconciled at the next checkpoint.",
 };
 
 // Known real-world maritime chokepoints/high-risk corridors. `triggerPorts`
-// is a simplified proxy for "this route plausibly transits this corridor" —
-// based on which of our synthetic ports sit near it. A real product would
+// is a simplified proxy for "this route plausibly transits this corridor", // based on which of our synthetic ports sit near it. A real product would
 // determine this from actual AIS waypoint data, not port-name matching, and
 // would source the risk-zone list itself from a live advisory feed (e.g.
 // UKMTO's Voluntary Reporting Area or the Joint War Committee listed areas)
@@ -178,7 +177,7 @@ const ROUTE_ZONES = [
 ];
 const ROUTE_ZONE_LABELS = Object.fromEntries(ROUTE_ZONES.map((z) => [z.key, z.label]));
 
-// Approximate lon/lat for the synthetic port set — used only to place dots
+// Approximate lon/lat for the synthetic port set, used only to place dots
 // and lanes on the control-tower map. Not survey-grade; good enough to make
 // the geography readable at a glance.
 const PORT_COORDS = {
@@ -189,7 +188,7 @@ const PORT_COORDS = {
 };
 
 // The line an experienced control-tower operator would actually write next
-// to an exception. Deliberately opinionated — half of these say "don't act".
+// to an exception. Deliberately opinionated, half of these say "don't act".
 const OPERATOR_NOTES = {
   sealBroken: "Seal integrity is gone. Don't wait for the carrier's explanation \u2014 open a claim file now and inspect at gate-out.",
   customsHold: "Customs hold. Most of these clear in 48\u201372h. Only escalate if it's a contractual line or perishable.",
@@ -217,7 +216,7 @@ function operatorNote(sku) {
 }
 
 // Data sources feeding the confidence engine, and how much to trust each
-// one's anomaly reports by default — tunable in Settings. A known-noisy
+// one's anomaly reports by default, tunable in Settings. A known-noisy
 // source (GPS telemetry glitches, manual scan human error) has its
 // reported disruptions dampened rather than taken at full weight.
 const DATA_SOURCES = ["Carrier EDI", "Terminal System", "GPS Telemetry", "Customs System", "Manual Scan", "AIS Feed"];
@@ -236,10 +235,10 @@ const CONFLICT_SOURCE_PAIRS = [
   ["Customs System", "Carrier EDI"],
 ];
 // Milestones that must have already occurred before a given disruption can
-// legitimately be logged — used to catch data-entry/timestamp inconsistencies.
+// legitimately be logged, used to catch data-entry/timestamp inconsistencies.
 const DISRUPTION_PREREQUISITES = { customsHold: "exportCleared", sealBroken: "sealed" };
 
-// Default point values — these become the starting values in the Settings
+// Default point values, these become the starting values in the Settings
 // tab, and can be edited live by the user. DEFAULT_WEIGHTS mirrors the PRD's
 // FR4 weighting (plus route/compliance and data-quality risk); DEFAULT_THRESHOLDS mirrors FR6.
 const DEFAULT_WEIGHTS = {
@@ -263,7 +262,7 @@ const RISK_META = {
   alert: { label: "Alert", color: C.coral, dim: C.coralDim },
 };
 
-// Simulated "calibration" — stand-in for what a Bayesian/ML pass would
+// Simulated "calibration", stand-in for what a Bayesian/ML pass would
 // produce once real historical outcome data exists (PRD v2). These factors
 // widen or shrink each event's weight relative to whatever is set in
 // Settings (defaulting to the v1 rule-based weights).
@@ -414,7 +413,7 @@ function generateData() {
         }
       });
 
-      // Data conflict — two independent systems disagree on the shipment's
+      // Data conflict, two independent systems disagree on the shipment's
       // status. A mild trust signal (usually a sync/timing issue), not
       // proof of a physical problem.
       if (rng() < 0.08 && events.length > 1) {
@@ -430,7 +429,7 @@ function generateData() {
         });
       }
 
-      // Timestamp/logical-order anomaly detection — flags a disruption that
+      // Timestamp/logical-order anomaly detection, flags a disruption that
       // was logged before a milestone it logically depends on (e.g. a
       // customs hold recorded before export clearance even started). This
       // is real detection logic, not a seeded fake: it catches genuine
@@ -450,7 +449,7 @@ function generateData() {
         }
       });
 
-      // Container barging — routine intermodal handling at Rhine-connected
+      // Container barging, routine intermodal handling at Rhine-connected
       // ports (Rotterdam/Antwerp/Hamburg), not a risk event, so delta is 0.
       const gateInEvent = events.find((e) => e.type === "gateIn");
       const dischargedEvent = events.find((e) => e.type === "discharged");
@@ -532,7 +531,7 @@ function generateData() {
         const perishable = category === "Pharmaceuticals" ? true : rng() < 0.05;
         const shelfLifeDays = perishable ? randInt(5, 90) : null;
         // Real feeds are incomplete. A small share of records arrive with
-        // fields the source never populated — shown as "\u2014", never invented.
+        // fields the source never populated, shown as "n/a", never invented.
         const customerMissing = rng() < 0.025;
         skus.push({
           id: skuId,
@@ -592,7 +591,7 @@ function RiskBadge({ risk }) {
 }
 
 // Confidence is never just a number: the meter is paired with the evidence
-// that produced it — contributors, sources, gaps and the recommended action.
+// that produced it, contributors, sources, gaps and the recommended action.
 function ConfidenceGauge({ value, thresholds, timeline }) {
   const risk = riskFromConfidence(value, thresholds);
   const color = RISK_META[risk].color;
@@ -623,10 +622,10 @@ function ConfidenceGauge({ value, thresholds, timeline }) {
       <dl className="mt-3 flex flex-col gap-1.5">
         <EvidenceRow label="Drivers">
           {detractors.length === 0
-            ? "No penalties applied — clean chain."
+            ? "No penalties applied, clean chain."
             : detractors.map((d) => `${d.label} ${d.delta}`).join(" · ")}
         </EvidenceRow>
-        <EvidenceRow label="Sources">{sources.length ? sources.join(" · ") : "—"}</EvidenceRow>
+        <EvidenceRow label="Sources">{sources.length ? sources.join(" · ") : "n/a"}</EvidenceRow>
         <EvidenceRow label="Gaps">
           {gaps.length ? `${gaps.length} unreported milestone${gaps.length > 1 ? "s" : ""}` : "None open"}
         </EvidenceRow>
@@ -816,7 +815,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill, mode
     return days;
   }, [skus]);
 
-  // Feed health. One source is deliberately behind — real control towers
+  // Feed health. One source is deliberately behind, real control towers
   // always have one, and pretending otherwise is the tell of a fake demo.
   const feeds = useMemo(() => {
     const latest = {};
@@ -912,7 +911,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill, mode
                     </td>
                     <td className="py-1.5 pr-3 whitespace-nowrap align-top" style={{ color: C.textMuted }}>{e.location}</td>
                     <td className="py-1.5 pr-4 text-right whitespace-nowrap align-top" style={{ fontFamily: FONT_MONO, fontSize: 11, color: e.delta < 0 ? C.coral : C.textFaint }}>
-                      {e.delta < 0 ? e.delta : "\u2014"}
+                      {e.delta < 0 ? e.delta : "n/a"}
                     </td>
                   </tr>
                 ))}
@@ -1063,7 +1062,7 @@ function LiveDot({ color = C.coral, label, size = 7 }) {
   );
 }
 
-/* The scoring mode is not a side switch — this strip shows, on every tab,
+/* The scoring mode is not a side switch, this strip shows, on every tab,
    what the active mode is doing to the numbers on screen right now, and what
    the other one would do instead. */
 function ModeBar({ mode, active, alt, onSwitch, onExplain }) {
@@ -1147,8 +1146,7 @@ function StatusTile({ count, unit, label, sub, color, onClick, first }) {
 }
 
 
-/* Lanes and ports on an equirectangular frame. Positions are approximate —
-   this is a situational display, not a navigation chart. */
+/* Lanes and ports on an equirectangular frame. Positions are approximate, this is a situational display, not a navigation chart. */
 function RouteMap({ shipments, skus }) {
   const lanes = useMemo(() => {
     const worstByShipment = {};
@@ -1475,7 +1473,7 @@ function ExceptionsView({ skus, onSelectSku, preset }) {
                     onClick={() => onSelectSku(s.id)}
                   >
                     <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: C.text }}>{s.id}</td>
-                    <td className="py-2 pr-3" style={{ color: s.customer ? C.textMuted : C.textFaint }}>{s.customer || "\u2014"}</td>
+                    <td className="py-2 pr-3" style={{ color: s.customer ? C.textMuted : C.textFaint }}>{s.customer || "n/a"}</td>
                     <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>${s.value.toLocaleString()}</td>
                     <td className="py-2 pr-3" style={{ fontFamily: FONT_MONO, color: urgencyColor }}>
                       {s.urgency}{s.isLate ? " · LATE" : ""}
@@ -1602,8 +1600,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
         <div className="flex items-start gap-2" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 13, lineHeight: 1.5 }}>
           <PlayCircle size={15} color={C.teal} className="mt-0.5 shrink-0" />
           <span>
-            Pick a SKU, then apply a hypothetical event to see how its confidence would move —
-            without changing any real data. Useful for answering "should I expedite a backup shipment?" before committing.
+            Pick a SKU, then apply a hypothetical event to see how its confidence would move, without changing any real data. Useful for answering "should I expedite a backup shipment?" before committing.
           </span>
         </div>
       </Panel>
@@ -1689,8 +1686,8 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                 </div>
 
                 <div style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.5 }} className="mb-3">
-                  Step 1 — pick a category. Step 2 — check one or more events (mix Disruption and Recovery if you
-                  like). Step 3 — hit Run to apply everything checked at once. You can run again afterward to
+                  Step 1: pick a category. Step 2: check one or more events (mix Disruption and Recovery if you
+                  like). Step 3: hit Run to apply everything checked at once. You can run again afterward to
                   layer on more.
                 </div>
 
@@ -1741,7 +1738,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                 {queuedOptions.length > 0 && (
                   <div className="mt-4 p-3 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
                     <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }} className="mb-2">
-                      QUEUED — {queuedOptions.length} EVENT{queuedOptions.length > 1 ? "S" : ""}
+                      QUEUED: {queuedOptions.length} EVENT{queuedOptions.length > 1 ? "S" : ""}
                     </div>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {queuedOptions.map((o) => (
@@ -1803,7 +1800,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
 }
 
 /* ---------------------------------------------------------
-   SETTINGS — adjustable risk thresholds & event weights
+   SETTINGS, adjustable risk thresholds & event weights
 --------------------------------------------------------- */
 function SettingsView({
   weights, setWeights, thresholds, setThresholds, watchlist, setWatchlist,
@@ -1870,12 +1867,12 @@ function SettingsView({
 
 
   const SOURCE_REASONS = {
-    "Carrier EDI": "The shipping line's own electronic feed — generally reliable, occasional batch lag.",
-    "Terminal System": "The port/terminal's own gate and yard system — generally reliable.",
-    "GPS Telemetry": "Container-mounted GPS trackers — historically prone to signal loss and false anomalies.",
-    "Customs System": "Government customs filings — authoritative, but subject to processing delay.",
-    "Manual Scan": "A human scanning a barcode/RFID at a checkpoint — occasional human error.",
-    "AIS Feed": "Vessel position broadcasts — generally reliable, occasional gaps in congested waters.",
+    "Carrier EDI": "The shipping line's own electronic feed, generally reliable, occasional batch lag.",
+    "Terminal System": "The port/terminal's own gate and yard system, generally reliable.",
+    "GPS Telemetry": "Container-mounted GPS trackers, historically prone to signal loss and false anomalies.",
+    "Customs System": "Government customs filings, authoritative, but subject to processing delay.",
+    "Manual Scan": "A human scanning a barcode/RFID at a checkpoint, occasional human error.",
+    "AIS Feed": "Vessel position broadcasts, generally reliable, occasional gaps in congested waters.",
   };
 
   const inputStyle = {
@@ -1900,7 +1897,7 @@ function SettingsView({
               <strong style={{ color: C.text, fontWeight: 600 }}>How the model is tuned.</strong> Every number
               below is a judgement call, not a technical setting: how much a customs hold should really count,
               where the line between "watch it" and "act on it" sits, how much to trust each data source.
-              Change one and every tab — Dashboard, SKU Search, Exceptions, Simulator — updates instantly.
+              Change one and every tab, Dashboard, SKU Search, Exceptions, Simulator, updates instantly.
             </span>
           </div>
           <button
@@ -1995,7 +1992,7 @@ function SettingsView({
         </h3>
         <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 13, lineHeight: 1.5 }} className="mb-4 max-w-2xl">
           How many confidence points each disruption costs in Rule-based mode. Calibrated mode multiplies
-          these same numbers by a fixed adjustment factor — see the Logic tab for the full comparison.
+          these same numbers by a fixed adjustment factor, see the Logic tab for the full comparison.
         </p>
         <div className="flex flex-col gap-2.5">
           {DISRUPTIONS.map((d) => (
@@ -2024,7 +2021,7 @@ function SettingsView({
         <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 13, lineHeight: 1.5 }} className="mb-4 max-w-2xl">
           Points deducted when a shipment's route plausibly transits a known high-risk maritime corridor,
           or touches a location on your watchlist below. These apply the same way as the event weights
-          above — they show up as regular entries in a SKU's custody ladder.
+          above, they show up as regular entries in a SKU's custody ladder.
         </p>
         <div className="flex flex-col gap-2.5">
           {ROUTE_ZONES.map((z) => (
@@ -2066,7 +2063,7 @@ function SettingsView({
             Compliance watchlist
           </h4>
           <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.5 }} className="mb-3 max-w-2xl">
-            Type any port, country, or region name your own compliance process needs flagged — this is
+            Type any port, country, or region name your own compliance process needs flagged, this is
             not a legal sanctions or denied-party list. Source that from your actual OFAC/EU/UN screening
             or legal team; this box only controls what <em>this prototype</em> highlights for you.
           </p>
@@ -2092,7 +2089,7 @@ function SettingsView({
           <div className="flex flex-wrap gap-2">
             {watchlist.length === 0 && (
               <span style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 12.5 }}>
-                No locations added yet — every shipment currently gets a "Clear" compliance flag.
+                No locations added yet, every shipment currently gets a "Clear" compliance flag.
               </span>
             )}
             {watchlist.map((w) => (
@@ -2116,7 +2113,7 @@ function SettingsView({
           <Database size={15} color={C.teal} /> Data quality
         </h3>
         <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 13, lineHeight: 1.5 }} className="mb-4 max-w-2xl">
-          Controls how much the confidence engine trusts what it's being told — separate from whether a
+          Controls how much the confidence engine trusts what it's being told, separate from whether a
           disruption actually happened. See the Logic tab for how each of these works.
         </p>
 
@@ -2124,7 +2121,7 @@ function SettingsView({
           <div className="flex-1 min-w-[220px]">
             <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>Missing-scan grace window</div>
             <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
-              A missing scan under this age doesn't count against confidence yet — most are just reporting lag.
+              A missing scan under this age doesn't count against confidence yet, most are just reporting lag.
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -2138,7 +2135,7 @@ function SettingsView({
             <div className="flex-1 min-w-[220px]">
               <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>Data Conflict</div>
               <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
-                Two systems disagree on status — usually a sync/timing issue, not proof of a physical problem.
+                Two systems disagree on status, usually a sync/timing issue, not proof of a physical problem.
               </div>
             </div>
             <input type="number" value={weights.dataConflict} onChange={(e) => setWeight("dataConflict", e.target.value)} style={inputStyle} />
@@ -2147,7 +2144,7 @@ function SettingsView({
             <div className="flex-1 min-w-[220px]">
               <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>Timestamp Anomaly</div>
               <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
-                A disruption logged before a milestone it depends on — a real, detected data inconsistency.
+                A disruption logged before a milestone it depends on, a real, detected data inconsistency.
               </div>
             </div>
             <input type="number" value={weights.timestampAnomaly} onChange={(e) => setWeight("timestampAnomaly", e.target.value)} style={inputStyle} />
@@ -2183,7 +2180,7 @@ function SettingsView({
 
       <Panel className="p-6">
         <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }} className="mb-4">
-          Live preview — {previewSkus.length} SKUs at current settings
+          Live preview, {previewSkus.length} SKUs at current settings
         </h3>
         <div className="flex h-3 rounded-full overflow-hidden mb-3" style={{ background: C.borderSoft }}>
           <div style={{ width: `${(100 * previewCounts.clear) / total}%`, background: C.teal }} />
@@ -2201,7 +2198,7 @@ function SettingsView({
 }
 
 /* ---------------------------------------------------------
-   INTEGRATIONS (illustrative — AIS live feed + ERP sync)
+   INTEGRATIONS (illustrative, AIS live feed + ERP sync)
 --------------------------------------------------------- */
 function IntegrationsView({ skus }) {
   const [pings, setPings] = useState(() =>
@@ -2400,7 +2397,7 @@ function AlertsBell({ skus, onSelectSku }) {
 }
 
 /* ---------------------------------------------------------
-   LOGIC — how the confidence engine works, in plain terms
+   LOGIC, how the confidence engine works, in plain terms
 --------------------------------------------------------- */
 function LogicView({ weights, thresholds }) {
   return (
@@ -2412,7 +2409,7 @@ function LogicView({ weights, thresholds }) {
           <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 16 }}>The problem</h3>
         </div>
         <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 14, lineHeight: 1.6 }} className="max-w-3xl">
-          Ocean containers move as one tracked unit, but they don't travel as one thing — a single 40ft
+          Ocean containers move as one tracked unit, but they don't travel as one thing, a single 40ft
           container can carry hundreds of SKUs belonging to different customers, categories, and pallets.
           Once that container is sealed, the tracking systems available today know where the box is, but
           not what's still reliably inside it.
@@ -2452,11 +2449,11 @@ function LogicView({ weights, thresholds }) {
         </div>
         <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 14, lineHeight: 1.6 }} className="max-w-3xl">
           Instead of adding hardware to every SKU, this framework infers each SKU's location and reliability from
-          logistics events that already happen — packing scans, container seals, gate movements, customs
+          logistics events that already happen, packing scans, container seals, gate movements, customs
           holds. Every SKU starts at 100% confidence when it's verified packed and sealed inside its
           container. From there, the confidence score only moves when something logistically meaningful
           happens to that container or SKU. You can tune exactly how much each event costs, and where the
-          Clear/Monitor/Alert lines sit, in the Settings tab — every number below reflects your current settings.
+          Clear/Monitor/Alert lines sit, in the Settings tab, every number below reflects your current settings.
         </p>
         <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 14, lineHeight: 1.6 }} className="max-w-3xl mt-4">
           That confidence score is what turns "Container ABC is in Singapore" into{" "}
@@ -2473,26 +2470,26 @@ function LogicView({ weights, thresholds }) {
         </div>
         <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 14, lineHeight: 1.6 }} className="max-w-3xl mb-4">
           Every custody ladder you see is built from this sequence. It uses real industry terminology rather
-          than generic labels — including where global and India-specific customs terms differ, since both
+          than generic labels, including where global and India-specific customs terms differ, since both
           are commonly taught and worth knowing.
         </p>
         <div className="flex flex-col gap-2">
           {[
             { label: "Booking Confirmed", side: "Origin", body: "The shipper reserves space with a carrier or NVOCC for a specific vessel and voyage." },
-            { label: "Container Stuffing Completed", side: "Origin", body: "Cargo is physically packed into the container — at the factory (\"factory stuffing\") or a Container Freight Station (CFS)." },
-            { label: "VGM Submitted", side: "Origin", body: "Verified Gross Mass — a mandatory SOLAS safety declaration of the container's total weight, required before it can be loaded." },
-            { label: "Carrier Seal Affixed", side: "Origin", body: "The carrier's numbered seal is fitted to the container doors — the physical basis for later checking whether a seal was broken in transit." },
+            { label: "Container Stuffing Completed", side: "Origin", body: "Cargo is physically packed into the container, at the factory (\"factory stuffing\") or a Container Freight Station (CFS)." },
+            { label: "VGM Submitted", side: "Origin", body: "Verified Gross Mass, a mandatory SOLAS safety declaration of the container's total weight, required before it can be loaded." },
+            { label: "Carrier Seal Affixed", side: "Origin", body: "The carrier's numbered seal is fitted to the container doors, the physical basis for later checking whether a seal was broken in transit." },
             { label: "Container Gate-In (Origin Terminal)", side: "Origin", body: "The container is physically received at the origin port/terminal, entering the terminal's custody." },
             { label: "Customs Export Clearance (LEO Issued)", side: "Origin", body: "The export declaration is filed and cleared. \"LEO\" (Let Export Order) is the Indian customs term for this release; other countries use their own export-declaration systems (e.g. the US's AES)." },
-            { label: "Loaded per Stowage Plan", side: "Origin", body: "The container is craned aboard at the position assigned in the vessel's stowage plan (bay plan) — which bay, row, and tier it sits in." },
-            { label: "Bill of Lading Issued", side: "Origin", body: "The carrier issues the B/L — the contract of carriage and title document for the cargo. A Master B/L covers the whole shipment; a House B/L may be issued by a freight forwarder to the actual shipper." },
-            { label: "Vessel Departure", side: "Origin", body: "ETD — the vessel sails from the origin port." },
-            { label: "Transshipment at Hub Port", side: "In transit", body: "Some routes move cargo to a second vessel at a hub port rather than sailing direct — this step only appears when that happens." },
-            { label: "Vessel Arrival", side: "Destination", body: "ETA — the vessel arrives and berths at the destination port." },
+            { label: "Loaded per Stowage Plan", side: "Origin", body: "The container is craned aboard at the position assigned in the vessel's stowage plan (bay plan), which bay, row, and tier it sits in." },
+            { label: "Bill of Lading Issued", side: "Origin", body: "The carrier issues the B/L, the contract of carriage and title document for the cargo. A Master B/L covers the whole shipment; a House B/L may be issued by a freight forwarder to the actual shipper." },
+            { label: "Vessel Departure", side: "Origin", body: "ETD, the vessel sails from the origin port." },
+            { label: "Transshipment at Hub Port", side: "In transit", body: "Some routes move cargo to a second vessel at a hub port rather than sailing direct, this step only appears when that happens." },
+            { label: "Vessel Arrival", side: "Destination", body: "ETA, the vessel arrives and berths at the destination port." },
             { label: "Discharged from Vessel", side: "Destination", body: "The container is craned off the ship onto the destination terminal." },
-            { label: "Import Manifest Filed", side: "Destination", body: "The carrier files an arrival manifest with customs before cargo can be released — called the IGM (Import General Manifest) in India; other customs authorities use their own manifest systems." },
+            { label: "Import Manifest Filed", side: "Destination", body: "The carrier files an arrival manifest with customs before cargo can be released, called the IGM (Import General Manifest) in India; other customs authorities use their own manifest systems." },
             { label: "Customs Import Clearance", side: "Destination", body: "Duty is assessed and the shipment is cleared for release. In India this is the Bill of Entry, filed against the IGM by the importer or their customs broker (CHA)." },
-            { label: "Container Gate-Out (Destination Terminal)", side: "Destination", body: "The container physically leaves the terminal — the point past which demurrage/detention charges are avoided if timed well." },
+            { label: "Container Gate-Out (Destination Terminal)", side: "Destination", body: "The container physically leaves the terminal, the point past which demurrage/detention charges are avoided if timed well." },
             { label: "Warehouse Received", side: "Destination", body: "The consignee (or their 3PL) confirms receipt at a warehouse or distribution center." },
             { label: "Delivered / Empty Returned", side: "Destination", body: "Final delivery to the consignee, and the empty container is returned to the carrier's depot." },
           ].map((row) => (
@@ -2515,11 +2512,11 @@ function LogicView({ weights, thresholds }) {
           style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_BODY, color: C.textMuted, lineHeight: 1.6 }}
         >
           Two more real details worth knowing: at Rhine-connected ports (Rotterdam, Antwerp, Hamburg), containers
-          often move between the deep-sea terminal and inland terminals by barge rather than truck or rail — a
+          often move between the deep-sea terminal and inland terminals by barge rather than truck or rail, a
           documented, routine practice called container barging. When a route touches one of those ports, you'll
-          see a neutral "Barge Transfer" entry in the custody ladder — it's an intermodal handling detail, not a
+          see a neutral "Barge Transfer" entry in the custody ladder, it's an intermodal handling detail, not a
           risk event, so it doesn't move the confidence score. And "Customs Import/Export Clearance" above is the
-          routine, expected paperwork step — it's distinct from "Customs Inspection Flagged" in the Settings
+          routine, expected paperwork step, it's distinct from "Customs Inspection Flagged" in the Settings
           weights, which represents the escalation where customs pulls the container for physical examination.
         </div>
       </Panel>
@@ -2532,11 +2529,11 @@ function LogicView({ weights, thresholds }) {
           <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 16 }}>Event weights, and how Rule-based differs from Calibrated</h3>
         </div>
         <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 14, lineHeight: 1.6 }} className="max-w-3xl mb-4">
-          Both modes replay the exact same event history for a SKU — nothing about what happened changes.
+          Both modes replay the exact same event history for a SKU, nothing about what happened changes.
           The only difference is how many confidence points each event type costs. <strong style={{ color: C.text }}>Rule-based</strong> uses
           whatever weight is set in the Settings tab (the PRD's own values, unless you've changed them).{" "}
           <strong style={{ color: C.text }}>Calibrated</strong> takes that same starting weight and multiplies it by a fixed
-          adjustment factor — a stand-in for what a real historical-outcomes analysis might conclude, since
+          adjustment factor, a stand-in for what a real historical-outcomes analysis might conclude, since
           no such analysis exists yet. The table below shows both, using your current Settings:
         </p>
         <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
@@ -2579,9 +2576,8 @@ function LogicView({ weights, thresholds }) {
           style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_BODY, color: C.textMuted, lineHeight: 1.6 }}
         >
           Being direct about it: the calibration multipliers above are illustrative, not derived from real
-          historical data — none exists yet. Rule-based is the honest v1: transparent, hand-set weights you
-          can defend event by event. Calibrated exists to demonstrate the v2 direction the PRD describes —
-          replacing hand-set weights with ones tuned against real outcomes once that data exists.
+          historical data, none exists yet. Rule-based is the honest v1: transparent, hand-set weights you
+          can defend event by event. Calibrated exists to demonstrate the v2 direction the PRD describes, replacing hand-set weights with ones tuned against real outcomes once that data exists.
         </div>
       </Panel>
 
@@ -2592,21 +2588,21 @@ function LogicView({ weights, thresholds }) {
           <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 16 }}>Prioritizing SKUs, not just tracking them</h3>
         </div>
         <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 14, lineHeight: 1.6 }} className="max-w-3xl mb-4">
-          In reality you need visibility into every SKU, but attention is finite — a planner can't treat a
+          In reality you need visibility into every SKU, but attention is finite, a planner can't treat a
           $40 phone case and a $12,000 pallet of equipment as equally urgent. The Exceptions tab lets you
           filter and sort on the signals below, on top of the existing risk tiers.
         </p>
         <div className="grid sm:grid-cols-2 gap-3 mb-4">
           <ProblemCard icon={CircleDollarSign} title="Value" body="A per-SKU dollar value (quantity × unit price). High-value SKUs get more weight in the Priority Score." />
           <ProblemCard icon={Clock} title="Urgency (Low/Medium/High)" body="Derived, not manually set: already-late shipments, perishables running low on shelf life, and tight time-to-ETA all raise it." />
-          <ProblemCard icon={Scale} title="SLA tier" body="Standard, Priority, or Contractual SLA — a proxy for penalty/relationship exposure if this SKU is late." />
+          <ProblemCard icon={Scale} title="SLA tier" body="Standard, Priority, or Contractual SLA, a proxy for penalty/relationship exposure if this SKU is late." />
           <ProblemCard icon={CircleDollarSign} title="Perishable / shelf life" body="Pharmaceuticals are always flagged perishable; a small share of other categories are too, with a remaining shelf-life countdown." />
         </div>
         <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 14, lineHeight: 1.6 }} className="max-w-3xl">
           Already-late status comes directly from the confidence engine rather than being random: delay,
           weather, customs-hold, and seal-broken events each carry a realistic schedule-slip (in days). A
           shipment is flagged late when its <em>accumulated</em> slip exceeds the schedule buffer it started
-          with — meaning known disruptions have already eaten through the cushion, so it's on track to miss
+          with, meaning known disruptions have already eaten through the cushion, so it's on track to miss
           its original promised date even though the displayed ETA (always shown as a sensible future date,
           never a confusing negative one) has simply moved out to account for it.
         </p>
@@ -2621,7 +2617,7 @@ function LogicView({ weights, thresholds }) {
           <br /><br />
           Deliberately not modeled here: <strong style={{ color: C.text }}>production-dependency</strong>{" "}
           (a cheap part halting an assembly line) and <strong style={{ color: C.text }}>substitutability</strong>{" "}
-          (how easily a SKU can be re-sourced). Both matter in the real world — they're a reasonable next step,
+          (how easily a SKU can be re-sourced). Both matter in the real world, they're a reasonable next step,
           not included in this pass.
         </div>
       </Panel>
@@ -2633,7 +2629,7 @@ function LogicView({ weights, thresholds }) {
           <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 16 }}>Data quality: telling "risky" apart from "unreliable data"</h3>
         </div>
         <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 14, lineHeight: 1.6 }} className="max-w-3xl mb-4">
-          A missing scan is usually a reporting gap, not proof the SKU is actually at risk — treating the two
+          A missing scan is usually a reporting gap, not proof the SKU is actually at risk, treating the two
           the same is one of the biggest gaps between a model like this and a real production system. Four
           safeguards, all tunable in Settings:
         </p>
@@ -2641,7 +2637,7 @@ function LogicView({ weights, thresholds }) {
           <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1">Grace window + self-healing</div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
-              A missing scan under the grace window (default 24h) doesn't cost confidence yet — it's marked{" "}
+              A missing scan under the grace window (default 24h) doesn't cost confidence yet, it's marked{" "}
               <span style={{ color: C.amber }}>PENDING</span>. If a later checkpoint confirms the SKU
               reappeared, the gap is reclassified as{" "}
               <span style={{ color: C.teal }}>SELF-HEALED</span> with zero lasting impact. Only a scan that's
@@ -2653,14 +2649,14 @@ function LogicView({ weights, thresholds }) {
             <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1">Conflict detection</div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               A small share of containers get a synthetic "two systems disagree" event (e.g. Carrier EDI vs
-              Terminal System) — a real category, but seeded at a flat rate here rather than arising from
+              Terminal System), a real category, but seeded at a flat rate here rather than arising from
               genuinely independent live feeds, which a real product would need.
             </p>
           </div>
           <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1">Timestamp anomaly detection</div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
-              This one isn't seeded — it's real logic that checks whether a disruption was logged before a
+              This one isn't seeded, it's real logic that checks whether a disruption was logged before a
               milestone it logically requires (a customs hold before export clearance even started; a broken
               seal before one was ever affixed). When the randomized generation above produces that
               inconsistency, this catches it.
@@ -2671,7 +2667,7 @@ function LogicView({ weights, thresholds }) {
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               Every disruption is tagged with the system that reported it (Carrier EDI, GPS Telemetry, Manual
               Scan, etc.), and its weight is multiplied by that source's trust factor. GPS Telemetry defaults
-              to 0.6 — a GPS anomaly moves confidence less than a seal-broken report from the Terminal System,
+              to 0.6, a GPS anomaly moves confidence less than a seal-broken report from the Terminal System,
               because GPS trackers are a known-noisier source. Tune this per source in Settings.
             </p>
           </div>
@@ -2704,10 +2700,10 @@ function LogicView({ weights, thresholds }) {
               <strong style={{ color: C.text }}>To make it real, you'd need:</strong>
             </p>
             <ul style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.7 }} className="list-disc pl-5 mt-1">
-              <li>A backend server holding ERP credentials — a browser can't safely call SAP/Oracle APIs directly</li>
-              <li>A real integration protocol — SAP OData services or IDocs, or Oracle Fusion Cloud REST APIs</li>
+              <li>A backend server holding ERP credentials, a browser can't safely call SAP/Oracle APIs directly</li>
+              <li>A real integration protocol, SAP OData services or IDocs, or Oracle Fusion Cloud REST APIs</li>
               <li>A field-mapping layer connecting this app's SKU ID to the ERP's Material Number, Plant, and Sales Order</li>
-              <li>A sync strategy — scheduled polling, or the ERP pushing webhooks when a record changes</li>
+              <li>A sync strategy, scheduled polling, or the ERP pushing webhooks when a record changes</li>
             </ul>
           </div>
 
@@ -2718,16 +2714,16 @@ function LogicView({ weights, thresholds }) {
             </div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               <strong style={{ color: C.text }}>What you see:</strong> every container has a flat, fixed-probability
-              chance of a "Weather Disruption" event with a fixed confidence penalty — completely unconnected to
+              chance of a "Weather Disruption" event with a fixed confidence penalty, completely unconnected to
               any real weather data or to that vessel's actual route.
             </p>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }} className="mt-2">
               <strong style={{ color: C.text }}>To make it real, you'd need three things chained together:</strong>
             </p>
             <ul style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.7 }} className="list-disc pl-5 mt-1">
-              <li>A real vessel position feed (see AIS below — it has the same gap)</li>
+              <li>A real vessel position feed (see AIS below, it has the same gap)</li>
               <li>A real marine-weather data source (e.g. NOAA, StormGlass, or a marine weather-routing provider) queried along that vessel's actual route</li>
-              <li>A model connecting storm severity to actual delay or damage risk — ideally tuned against real historical outcomes rather than guessed, the same way the event weights above should eventually be calibrated</li>
+              <li>A model connecting storm severity to actual delay or damage risk, ideally tuned against real historical outcomes rather than guessed, the same way the event weights above should eventually be calibrated</li>
             </ul>
           </div>
 
@@ -2738,8 +2734,8 @@ function LogicView({ weights, thresholds }) {
             </div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               <strong style={{ color: C.text }}>What you see:</strong> a timer that invents a new fake vessel
-              position every few seconds. To make it real you'd need an actual AIS data provider — e.g.
-              MarineTraffic, Spire, or a direct AIS receiver feed — rather than a timer.
+              position every few seconds. To make it real you'd need an actual AIS data provider, e.g.
+              MarineTraffic, Spire, or a direct AIS receiver feed, rather than a timer.
             </p>
           </div>
 
@@ -2751,17 +2747,17 @@ function LogicView({ weights, thresholds }) {
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               <strong style={{ color: C.text }}>What you see:</strong> a shipment is flagged as transiting
               the Strait of Hormuz, the Gulf of Aden, the Strait of Malacca, or the Red Sea based only on
-              whether its origin or destination port is near that corridor — a coin-flip proxy, not a real
+              whether its origin or destination port is near that corridor, a coin-flip proxy, not a real
               route. Separately, the "watchlist" in Settings is a plain text-match against a list <em>you</em> type
-              in — it is not a legal sanctions or denied-party determination of any kind.
+              in, it is not a legal sanctions or denied-party determination of any kind.
             </p>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }} className="mt-2">
               <strong style={{ color: C.text }}>To make it real, you'd need:</strong>
             </p>
             <ul style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.7 }} className="list-disc pl-5 mt-1">
               <li>Real AIS waypoint data to reconstruct the actual route a vessel sailed, not just its origin/destination</li>
-              <li>A live maritime-security advisory feed for which corridors are currently high-risk and how severe — e.g. UKMTO's Voluntary Reporting Area or the Joint War Committee's listed areas, since these zones and their risk level change over time</li>
-              <li>A real denied-party/sanctions screening service (e.g. an OFAC SDN list checker, or a commercial screening provider) wired into your actual compliance process — not a free-text box in a prototype</li>
+              <li>A live maritime-security advisory feed for which corridors are currently high-risk and how severe, e.g. UKMTO's Voluntary Reporting Area or the Joint War Committee's listed areas, since these zones and their risk level change over time</li>
+              <li>A real denied-party/sanctions screening service (e.g. an OFAC SDN list checker, or a commercial screening provider) wired into your actual compliance process, not a free-text box in a prototype</li>
             </ul>
           </div>
         </div>
@@ -2775,11 +2771,11 @@ function LogicView({ weights, thresholds }) {
         </div>
         <div className="grid sm:grid-cols-3 gap-3">
           <HelpLink icon={Gauge} title="Dashboard" body="Fleet-wide health: how many shipments are moving, average confidence, and how many containers or SKUs need attention right now." />
-          <HelpLink icon={Search} title="SKU Search" body="Look up one SKU and see its custody ladder — every event in its chain of custody and exactly how each one moved its confidence score." />
-          <HelpLink icon={AlertTriangle} title="Exceptions" body="A worklist of the SKUs that most need attention — filter by urgency, SLA tier, value, perishability, or a custom list, and sort by confidence or Priority Score." />
-          <HelpLink icon={PlayCircle} title="Simulator" body="Test a hypothetical event against a real SKU — e.g. 'what if this container is held at customs?' — before deciding whether to expedite a backup." />
+          <HelpLink icon={Search} title="SKU Search" body="Look up one SKU and see its custody ladder, every event in its chain of custody and exactly how each one moved its confidence score." />
+          <HelpLink icon={AlertTriangle} title="Exceptions" body="A worklist of the SKUs that most need attention, filter by urgency, SLA tier, value, perishability, or a custom list, and sort by confidence or Priority Score." />
+          <HelpLink icon={PlayCircle} title="Simulator" body="Test a hypothetical event against a real SKU, e.g. 'what if this container is held at customs?', before deciding whether to expedite a backup." />
           <HelpLink icon={Settings} title="Settings" body="Adjust risk thresholds, event weights, the compliance watchlist, and data-quality controls like source reliability and the missing-scan grace window." />
-          <HelpLink icon={Satellite} title="Integrations" body="Illustrates what a live AIS vessel feed and an ERP sync (SAP/Oracle) would surface once this prototype is connected to real systems — see above for exactly what's fake and how to make it real." />
+          <HelpLink icon={Satellite} title="Integrations" body="Illustrates what a live AIS vessel feed and an ERP sync (SAP/Oracle) would surface once this prototype is connected to real systems, see above for exactly what's fake and how to make it real." />
         </div>
         <p
           className="mt-4 p-3 rounded-md text-xs"
@@ -2834,8 +2830,7 @@ export default function App() {
 
     // A shipment "touches" the watchlist if its origin or destination
     // matches any entry the user has configured in Settings. This is a
-    // simplified name-match, not a real denied-party/sanctions screen —
-    // see the Logic tab for what a real check would require.
+    // simplified name-match, not a real denied-party/sanctions screen, // see the Logic tab for what a real check would require.
     const touchesWatchlist = (shipmentId) => {
       const s = shipmentById[shipmentId];
       if (!s || watchlist.length === 0) return false;
@@ -2866,7 +2861,7 @@ export default function App() {
     // already running late, a perishable SKU running low on shelf life, how
     // little time is left before the (current, slip-adjusted) ETA, and
     // contractual exposure. Deliberately excludes production-dependency and
-    // substitutability — not modeled in this prototype.
+    // substitutability, not modeled in this prototype.
     const computeUrgency = (sku, shipment) => {
       if (!shipment) return "Low";
       if (shipment.isLate) return "High";
@@ -2982,7 +2977,7 @@ export default function App() {
               onClick={() => setTab("dashboard")}
               className="flex items-center gap-2 shrink-0"
               style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
-              aria-label="Where Is My Shipment — back to Overview"
+              aria-label="Where Is My Shipment, back to Overview"
             >
               <Anchor size={16} color={C.teal} className="logo-bob" style={{ animation: "logo-bob 4s ease-in-out infinite" }} />
               <span
@@ -3192,17 +3187,17 @@ function SearchView({ data, selectedId, onSelectId }) {
               <InfoCell label="Shipment" value={selected.shipmentId} />
               <InfoCell
                 label="ETA"
-                value={shipment ? `${shipment.eta.toISOString().slice(0, 10)}${shipment.isLate ? " (LATE)" : ""}` : "—"}
+                value={shipment ? `${shipment.eta.toISOString().slice(0, 10)}${shipment.isLate ? " (LATE)" : ""}` : "n/a"}
                 highlight={shipment?.isLate}
               />
 
               {shipment && shipment.eta.getTime() !== shipment.plannedEta.getTime() && (
                 <InfoCell label="Originally Due" value={shipment.plannedEta.toISOString().slice(0, 10)} />
               )}
-              <InfoCell label="Vessel" value={shipment ? shipment.vessel : "—"} />
-              <InfoCell label="Route" value={shipment ? `${shipment.origin} → ${shipment.destination}` : "—"} />
-              <InfoCell label="Seal Status" value={container ? container.sealStatus : "—"} highlight={container?.sealStatus === "Broken"} />
-              <InfoCell label="GPS Status" value={container ? container.gpsStatus : "—"} highlight={container?.gpsStatus === "Anomaly"} />
+              <InfoCell label="Vessel" value={shipment ? shipment.vessel : "n/a"} />
+              <InfoCell label="Route" value={shipment ? `${shipment.origin} → ${shipment.destination}` : "n/a"} />
+              <InfoCell label="Seal Status" value={container ? container.sealStatus : "n/a"} highlight={container?.sealStatus === "Broken"} />
+              <InfoCell label="GPS Status" value={container ? container.gpsStatus : "n/a"} highlight={container?.gpsStatus === "Anomaly"} />
               <InfoCell
                 label="Route Risk"
                 value={shipment && shipment.routeZones.length > 0 ? shipment.routeZones.map((z) => ROUTE_ZONE_LABELS[z]).join(", ") : "None flagged"}

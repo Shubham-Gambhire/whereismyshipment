@@ -8,7 +8,7 @@ import { HelpCircle, Info, ChevronDown } from "lucide-react";
    A translation layer sitting on top of the prototype so a
    recruiter, student or non-logistics visitor can read the
    same screens an industry expert reads. Nothing here changes
-   the model — it only explains it.
+   the model, it only explains it.
 --------------------------------------------------------- */
 
 const C = {
@@ -31,7 +31,7 @@ const FONT_MONO = "'IBM Plex Mono', monospace";
 export const GLOSSARY = {
   "VGM Submitted":
     "VGM = Verified Gross Mass. The container's certified weight, filed before loading. Without it, the carrier can legally refuse to load the box.",
-  VGM: "Verified Gross Mass — the container's certified weight, filed before loading. Missing it can block the container from being loaded.",
+  VGM: "Verified Gross Mass, the container's certified weight, filed before loading. Missing it can block the container from being loaded.",
   "Carrier Seal Affixed":
     "A numbered seal is locked onto the container doors. From here on, a broken or swapped seal means possible tampering.",
   "Container Stuffing Completed":
@@ -46,36 +46,36 @@ export const GLOSSARY = {
   "Gate-Out": "The container left the destination terminal for inland transport.",
   "Customs Export Clearance":
     "Customs at origin has approved the goods for export. LEO = Let Export Order, the formal release.",
-  LEO: "Let Export Order — the formal customs approval that allows the cargo to leave the country.",
+  LEO: "Let Export Order, the formal customs approval that allows the cargo to leave the country.",
   "Loaded per Stowage Plan":
     "The container has been placed on the vessel in the exact slot the stowage plan assigned. Confirms it is physically on board.",
   "Stowage Plan": "The vessel's loading map: which container sits in which slot on which deck.",
   "Bill of Lading":
     "The Bill of Lading (BL) is the contract and title document for the cargo. Whoever holds it can claim the goods.",
   "Bill of Lading Issued":
-    "The carrier has issued the Bill of Lading — the contract and title document for the cargo.",
+    "The carrier has issued the Bill of Lading, the contract and title document for the cargo.",
   Transshipment:
     "The container is moved from one vessel to another at an intermediate hub port. Each transfer is an extra chance to lose visibility.",
   "Import Manifest Filed":
     "The carrier has declared the inbound cargo to destination customs before arrival.",
   "Customs Import Clearance":
-    "Destination customs has released the cargo. This is a routine, expected step — not the same as being flagged for inspection.",
+    "Destination customs has released the cargo. This is a routine, expected step, not the same as being flagged for inspection.",
   "Vessel Departure": "The ship has physically left the origin port.",
   "Vessel Arrival": "The ship has arrived at the destination port.",
   Discharged: "The container has been lifted off the vessel onto the quay.",
   "Warehouse Received": "The goods have been booked into the destination warehouse.",
-  "Empty Returned": "The emptied container has been handed back to the carrier — the cycle is closed.",
+  "Empty Returned": "The emptied container has been handed back to the carrier, the cycle is closed.",
   "Carrier EDI":
     "EDI = Electronic Data Interchange. The shipping line's automated status feed. Reliable, but sometimes batched and late.",
-  EDI: "Electronic Data Interchange — the shipping line's automated status message feed.",
+  EDI: "Electronic Data Interchange, the shipping line's automated status message feed.",
   "AIS Feed":
     "AIS = Automatic Identification System. Public vessel position broadcasts, used here to see which risk waters a ship transits.",
-  AIS: "Automatic Identification System — public vessel position broadcasts used to track ships at sea.",
+  AIS: "Automatic Identification System, public vessel position broadcasts used to track ships at sea.",
   "GPS Telemetry":
     "Position readings from a tracker mounted on the container itself. Highest detail, but the noisiest source.",
   "Manual Scan": "A person scanning a barcode or RFID tag at a checkpoint. Accurate when it happens, easy to skip.",
   "Missing Scan":
-    "A milestone that should have been reported has not arrived. Usually a data problem, occasionally a real one — which is why it waits out a grace window first.",
+    "A milestone that should have been reported has not arrived. Usually a data problem, occasionally a real one, which is why it waits out a grace window first.",
   "Customs Inspection Flagged":
     "Customs has pulled the container aside for physical or documentary examination. Typically adds days, not hours.",
   "Seal Broken":
@@ -83,8 +83,8 @@ export const GLOSSARY = {
   "Grace Window":
     "A waiting period before a missing milestone counts against the score, so ordinary reporting lag isn't treated as a real problem.",
   Chokepoint:
-    "A narrow stretch of water every ship on the route must pass through — congestion or conflict there hits many shipments at once.",
-  SKU: "Stock Keeping Unit — one specific product line. A single container usually carries many SKUs.",
+    "A narrow stretch of water every ship on the route must pass through, congestion or conflict there hits many shipments at once.",
+  SKU: "Stock Keeping Unit, one specific product line. A single container usually carries many SKUs.",
   Demurrage:
     "Charges the port levies when a container sits at the terminal beyond the free time allowed.",
 };
@@ -92,7 +92,7 @@ export const GLOSSARY = {
 const GLOSSARY_KEYS = Object.keys(GLOSSARY).sort((a, b) => b.length - a.length);
 
 /* ---------------------------------------------------------
-   TOOLTIP — hover on desktop, click/tap anywhere
+   TOOLTIP, hover on desktop, click/tap anywhere
 --------------------------------------------------------- */
 export function Term({ term, children }) {
   const [open, setOpen] = useState(false);
@@ -187,7 +187,7 @@ export function Glossed({ text }) {
 }
 
 /* ---------------------------------------------------------
-   CONSEQUENCE FRAMING — what a score means in business terms
+   CONSEQUENCE FRAMING, what a score means in business terms
 --------------------------------------------------------- */
 export function confidenceAdvice(value, thresholds) {
   const clear = thresholds?.clear ?? 80;
@@ -196,7 +196,7 @@ export function confidenceAdvice(value, thresholds) {
     return {
       color: C.teal,
       headline: "On track",
-      action: "Location is well evidenced. No action needed — keep the promised date.",
+      action: "Location is well evidenced. No action needed, keep the promised date.",
     };
   }
   if (value >= monitor) {
@@ -231,7 +231,7 @@ export function ConfidenceAdvice({ value, thresholds }) {
 }
 
 /* ---------------------------------------------------------
-   "WHAT AM I LOOKING AT" — one business sentence per tab
+   "WHAT AM I LOOKING AT", one business sentence per tab
 --------------------------------------------------------- */
 const TAB_INTROS = {
   dashboard: {
@@ -256,7 +256,7 @@ const TAB_INTROS = {
   },
   integrations: {
     q: "Where the data would come from.",
-    a: "Carrier feeds, terminals, customs, vessel positions — and what each is genuinely good and bad at.",
+    a: "Carrier feeds, terminals, customs, vessel positions, and what each is genuinely good and bad at.",
   },
   logic: {
     q: "The full reasoning.",
@@ -287,7 +287,7 @@ export function TabIntro({ tab }) {
 }
 
 /* ---------------------------------------------------------
-   READ THIS FIRST — the 30-second orientation panel
+   READ THIS FIRST, the 30-second orientation panel
 --------------------------------------------------------- */
 export function ReadThisFirst() {
   const [open, setOpen] = useState(true);
@@ -314,7 +314,7 @@ export function ReadThisFirst() {
       {open && (
         <div className="px-3.5 pb-3">
           <p style={{ fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.55, color: C.textMuted, margin: 0, maxWidth: 720 }}>
-            A shipment is tracked as one container, but a business sells individual products — so when something
+            A shipment is tracked as one container, but a business sells individual products, so when something
             goes wrong, nobody can say which product is affected or how sure we even are. Every product here starts
             at 100% and loses points each time the evidence for its location weakens.
           </p>
