@@ -104,25 +104,26 @@ export function Term({ term, children }) {
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <button
-        type="button"
+      <span
+        role="button"
+        tabIndex={0}
         onClick={(e) => {
           e.stopPropagation();
           setOpen((v) => !v);
         }}
-        className="cursor-help"
-        style={{
-          font: "inherit",
-          color: "inherit",
-          background: "none",
-          border: "none",
-          padding: 0,
-          borderBottom: `1px dotted ${C.textMuted}`,
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            setOpen((v) => !v);
+          }
         }}
+        className="cursor-help"
+        style={{ borderBottom: `1px dotted ${C.textMuted}` }}
         aria-label={`What is ${term}?`}
       >
         {children ?? term}
-      </button>
+      </span>
       {open && (
         <span
           role="tooltip"
