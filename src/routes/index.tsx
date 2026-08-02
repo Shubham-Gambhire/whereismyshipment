@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Hero } from "@/components/showcase/Hero";
 import { ApproachSection, ProblemSection } from "@/components/showcase/ProblemApproach";
-import { Walkthrough } from "@/components/showcase/Walkthrough";
 import { Concepts } from "@/components/showcase/Concepts";
-import { Architecture, Highlights, Process, Stack } from "@/components/showcase/Sections";
+import { Architecture, Highlights, Implementation, Limitations, Process, Stack } from "@/components/showcase/Sections";
 
 const title = "Where Is My Shipment — Supply Chain Visibility Prototype";
 const description =
