@@ -67,7 +67,7 @@ export function DashboardMock() {
         <PanelBox title="Average confidence by category" className="md:col-span-3">
           <div className="flex h-28 items-end gap-2 md:h-36">
             {categories.map((c, i) => (
-              <div key={c.name} className="flex flex-1 flex-col items-center gap-1.5">
+              <div key={c.name} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
                 <div
                   className="w-full rounded-t bg-teal/80"
                   style={{
