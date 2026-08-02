@@ -3013,21 +3013,23 @@ export default function App() {
         </div>
       </header>
 
-      {tab === "dashboard" && (
-        <ModeBar
-          mode={mode}
-          active={viewData}
-          alt={altData}
-          onSwitch={() => setMode(altMode)}
-          onExplain={() => setTab("logic")}
-        />
-      )}
-
       <main className="px-3 sm:px-5 py-4 max-w-[1440px] mx-auto">
         {tab === "dashboard" && <BrandMark />}
         <TabIntro tab={tab} />
         {tab === "dashboard" && (
-          <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} onDrill={drillToExceptions} />
+          <DashboardView
+            shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus}
+            onSelectSku={goToSku} onDrill={drillToExceptions}
+            modeBar={
+              <ModeBar
+                mode={mode}
+                active={viewData}
+                alt={altData}
+                onSwitch={() => setMode(altMode)}
+                onExplain={goToWeightsLogic}
+              />
+            }
+          />
         )}
         {tab === "search" && (
           <SearchView data={viewData} selectedId={selectedSkuId} onSelectId={setSelectedSkuId} />
