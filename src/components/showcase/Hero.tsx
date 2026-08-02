@@ -42,6 +42,12 @@ export function Hero() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link
+              to="/prototype"
+              className="inline-flex items-center gap-2 rounded-full bg-teal px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
+            >
+              <PlayCircle className="size-4" /> Open the prototype
+            </Link>
             <a
               href={GITHUB_URL}
               className="inline-flex items-center gap-2 rounded-full border border-border bg-panel px-4 py-2 text-sm text-foreground transition-colors hover:border-teal-dim hover:text-teal"
@@ -56,6 +62,7 @@ export function Hero() {
               <ArrowUpRight className="size-3.5" />
             </a>
           </div>
+
         </div>
 
         <div
