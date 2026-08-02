@@ -1219,8 +1219,9 @@ function RouteMap({ shipments, skus }) {
               d={`M ${ax} ${ay} Q ${mx} ${my} ${bx} ${by}`}
               fill="none"
               stroke={color}
-              strokeWidth={risk === "alert" ? 0.8 : 0.5}
-              strokeOpacity={risk === "clear" ? 0.32 : 0.75}
+              strokeWidth={risk === "alert" ? 0.8 : 0.55}
+              strokeOpacity={risk === "clear" ? 0.6 : 0.8}
+
             />
           );
         })}
