@@ -2748,63 +2748,58 @@ export default function App() {
         </div>
 
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin" }}>
-          <div className="flex rounded-md overflow-hidden shrink-0" style={{ border: `1px solid ${C.border}` }}>
-            <button
-              onClick={() => setMode("rule")}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs whitespace-nowrap"
-              style={{
-                fontFamily: FONT_MONO,
-                background: mode === "rule" ? C.panelAlt : "transparent",
-                color: mode === "rule" ? C.teal : C.textMuted,
-              }}
-              title="Fixed weights from the Settings tab — see the Logic tab for exactly how these are set"
-            >
-              <Sliders size={12} /> RULE-BASED
-            </button>
-            <button
-              onClick={() => setMode("calibrated")}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs whitespace-nowrap"
-              style={{
-                fontFamily: FONT_MONO,
-                background: mode === "calibrated" ? C.panelAlt : "transparent",
-                color: mode === "calibrated" ? C.amber : C.textMuted,
-              }}
-              title="Same Settings-tab weights, multiplied by a hypothetical calibration factor — see the Logic tab"
-            >
-              CALIBRATED
-            </button>
-          </div>
-
-          <span className="shrink-0 w-px self-stretch" style={{ background: C.border }} />
-
-          <nav className="flex gap-1.5 shrink-0">
+        <div className="flex items-end justify-between gap-3 overflow-x-auto" style={{ scrollbarWidth: "thin" }}>
+          <nav className="flex gap-4 shrink-0">
             {TABS.map((t) => {
-              const Icon = t.icon;
               const active = tab === t.key;
               return (
                 <button
                   key={t.key}
                   onClick={() => setTab(t.key)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm whitespace-nowrap shrink-0"
+                  className="whitespace-nowrap shrink-0 pb-2 pt-1"
                   style={{
                     fontFamily: FONT_BODY,
-                    background: active ? C.panelAlt : "transparent",
-                    border: `1px solid ${active ? C.teal : "transparent"}`,
-                    color: active ? C.teal : C.textMuted,
+                    fontSize: 12.5,
+                    fontWeight: active ? 600 : 400,
+                    background: "transparent",
+                    border: "none",
+                    borderBottom: `2px solid ${active ? C.teal : "transparent"}`,
+                    color: active ? C.text : C.textMuted,
+                    transition: "color 150ms ease",
                   }}
                 >
-                  <Icon size={14} /> {t.label}
+                  {t.label}
                 </button>
               );
             })}
           </nav>
-        </div>
 
-        <div style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint }}>
-          synthetic demo dataset · {data.shipments.length} shipments · {data.skus.length} SKUs
+          <div className="flex shrink-0 mb-1.5 overflow-hidden" style={{ border: `1px solid ${C.border}`, borderRadius: 5 }}>
+            {[
+              ["rule", "RULE", "Fixed weights from Settings — see Logic for how they are set"],
+              ["calibrated", "CALIBRATED", "Settings weights × a hypothetical calibration factor — see Logic"],
+            ].map(([key, label, tip]) => (
+              <button
+                key={key}
+                onClick={() => setMode(key)}
+                className="px-2.5 py-1 text-xs whitespace-nowrap"
+                style={{
+                  fontFamily: FONT_MONO,
+                  fontSize: 10,
+                  letterSpacing: 0.5,
+                  background: mode === key ? C.panelAlt : "transparent",
+                  border: "none",
+                  color: mode === key ? C.text : C.textFaint,
+                }}
+                title={tip}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
+
 
 
       <main className="p-4 sm:p-6 max-w-6xl mx-auto">
