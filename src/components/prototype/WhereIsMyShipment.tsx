@@ -12,7 +12,7 @@ import {
   Bell, Satellite, Database, RotateCcw, PlayCircle, Sliders, X, CheckCircle2,
   Settings, CloudRain, MapPinned, Clock
 } from "lucide-react";
-import { Glossed, Term, ConfidenceAdvice, TabIntro, ReadThisFirst } from "./Onboarding";
+import { Glossed, Term, ConfidenceAdvice, ReadThisFirst } from "./Onboarding";
 
 /* ---------------------------------------------------------
    DESIGN TOKENS
