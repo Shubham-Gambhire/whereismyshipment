@@ -235,32 +235,32 @@ export function ConfidenceAdvice({ value, thresholds }) {
 --------------------------------------------------------- */
 const TAB_INTROS = {
   dashboard: {
-    q: "What am I looking at?",
-    a: "Every shipment currently moving, and how confident the model is that it knows where each product actually is. Red means the location claim is weak enough to put the delivery date at risk.",
+    q: "The control tower.",
+    a: "Everything moving right now, and how much the model actually trusts its own location claim for each item. Click any number to see what's behind it.",
   },
   search: {
-    q: "What am I looking at?",
-    a: "One product line, traced end to end. The ladder is its full chain of custody — every handover, and what each event did to the confidence score.",
+    q: "One product, traced end to end.",
+    a: "Every handover it went through, and what each one did to the confidence score.",
   },
   exceptions: {
-    q: "What am I looking at?",
-    a: "The short list. Only the shipments whose confidence has fallen far enough that someone should decide what to do today.",
+    q: "The short list.",
+    a: "Only what needs a decision today. Each row carries the note I'd leave for whoever picks it up.",
   },
   simulator: {
-    q: "What am I looking at?",
-    a: "A rehearsal. Apply a hypothetical disruption — a customs hold, a port strike — to a real shipment and see the score move before it actually happens.",
+    q: "A rehearsal.",
+    a: "Drop a customs hold or a port strike onto a real shipment and watch the score move before it happens for real.",
   },
   settings: {
-    q: "What am I looking at?",
-    a: "The judgement calls behind the model, made explicit. How much each event should count, where the risk lines sit, and how much to trust each data source. Change one and every screen updates.",
+    q: "The judgement calls, made explicit.",
+    a: "What each event should cost, where the risk lines sit, how much each feed is worth trusting. Change one and every screen follows.",
   },
   integrations: {
-    q: "What am I looking at?",
-    a: "Where the data would come from in a real deployment — carrier feeds, terminal systems, customs filings, vessel positions — and what each one is good and bad at.",
+    q: "Where the data would come from.",
+    a: "Carrier feeds, terminals, customs, vessel positions \u2014 and what each is genuinely good and bad at.",
   },
   logic: {
-    q: "What am I looking at?",
-    a: "The full reasoning: every rule, weight and safeguard in the confidence engine, written out and justified.",
+    q: "The full reasoning.",
+    a: "Every rule, weight and safeguard in the confidence engine, written out and argued for.",
   },
 };
 
@@ -287,20 +287,17 @@ export function TabIntro({ tab }) {
 export function ReadThisFirst() {
   const [open, setOpen] = useState(true);
   return (
-    <div
-      className="rounded-xl overflow-hidden"
-      style={{ background: C.panel, border: `1px solid ${C.border}` }}
-    >
+    <div className="rounded-xl overflow-hidden" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
         style={{ background: "transparent", border: "none", cursor: "pointer" }}
       >
-        <span className="flex items-center gap-2">
-          <HelpCircle size={15} color={C.teal} />
-          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: C.text }}>
-            New here? Read this first
+        <span className="flex items-center gap-2 min-w-0">
+          <HelpCircle size={15} color={C.teal} className="shrink-0" />
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: C.text }} className="truncate">
+            First time here?
           </span>
         </span>
         <ChevronDown
@@ -310,43 +307,26 @@ export function ReadThisFirst() {
         />
       </button>
       {open && (
-        <div className="grid gap-4 px-4 pb-4 md:grid-cols-4">
-          {[
-            {
-              n: "01",
-              t: "The problem",
-              b: "A shipment is tracked as one container, but a business sells individual products. When something goes wrong, nobody can say which product is affected, or how sure we even are.",
-            },
-            {
-              n: "02",
-              t: "The confidence score",
-              b: "Each product starts at 100%. Every event that weakens the evidence — a missed scan, a customs hold, a broken seal — subtracts points weighted by how serious it is.",
-            },
-            {
-              n: "03",
-              t: "The three statuses",
-              b: "Clear = the location is well evidenced. Monitor = evidence is thinning, warn the customer. Alert = treat the delivery date as unsafe and act.",
-            },
-            {
-              n: "04",
-              t: "Try this",
-              b: "Open Exceptions to see what needs a decision today, then take one of those shipments into the Simulator and add a customs hold to see the score move.",
-            },
-          ].map((s) => (
-            <div key={s.n}>
-              <div style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.teal, letterSpacing: 1 }}>{s.n}</div>
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 13, color: C.text, marginTop: 4 }}>{s.t}</div>
-              <p style={{ fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.6, color: C.textMuted, marginTop: 4 }}>
-                {s.b}
-              </p>
-            </div>
-          ))}
-          <p
-            className="md:col-span-4"
-            style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.textFaint, margin: 0 }}
-          >
-            Any term with a dotted underline can be hovered or tapped for a plain-English explanation. All data
-            is synthetic.
+        <div className="px-4 pb-4">
+          <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.65, color: C.textMuted, margin: 0, maxWidth: 680 }}>
+            A shipment is tracked as one container, but a business sells individual products \u2014 so when something
+            goes wrong, nobody can say which product is affected or how sure we even are. Every product here starts
+            at 100% and loses points each time the evidence for its location weakens.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
+            {[
+              ["Clear", C.teal, "well evidenced, keep the date"],
+              ["Monitor", C.amber, "thinning, warn the customer"],
+              ["Alert", C.coral, "treat the date as unsafe"],
+            ].map(([l, c, d]) => (
+              <span key={l} className="flex items-center gap-1.5" style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.textMuted }}>
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: c }} />
+                <span style={{ color: c, fontFamily: FONT_MONO, fontSize: 11 }}>{l}</span> {d}
+              </span>
+            ))}
+          </div>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 10 }}>
+            Dotted underlines explain the jargon. All data is synthetic.
           </p>
         </div>
       )}
