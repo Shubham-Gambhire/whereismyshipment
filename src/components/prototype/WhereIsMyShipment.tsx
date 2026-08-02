@@ -892,7 +892,10 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
           <RouteMap shipments={shipments} skus={skus} />
         <Panel className="p-0 overflow-hidden">
           <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
-            <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>Coming in off the feeds</h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>Coming in off the feeds</h3>
+              <LiveDot label="LIVE" />
+            </div>
           </div>
           <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
             <table className="w-full" style={{ fontFamily: FONT_BODY, fontSize: 12, minWidth: 460 }}>
@@ -973,6 +976,83 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
         </Panel>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* A blinking indicator for anything fed by a (simulated) live stream. */
+function LiveDot({ color = C.coral, label, size = 7 }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 shrink-0">
+      <span className="relative inline-grid place-items-center" style={{ width: size + 6, height: size + 6 }}>
+        <span
+          className="live-halo absolute rounded-full"
+          style={{ width: size, height: size, background: color, animation: "live-halo 2s ease-out infinite" }}
+        />
+        <span
+          className="live-dot rounded-full"
+          style={{ width: size, height: size, background: color, animation: "live-blink 1.6s ease-in-out infinite" }}
+        />
+      </span>
+      {label && (
+        <span style={{ fontFamily: FONT_MONO, fontSize: 9.5, letterSpacing: 0.6, color }}>{label}</span>
+      )}
+    </span>
+  );
+}
+
+/* The scoring mode is not a side switch — this strip shows, on every tab,
+   what the active mode is doing to the numbers on screen right now, and what
+   the other one would do instead. */
+function ModeBar({ mode, active, alt, onSwitch, onExplain }) {
+  const stat = (d) => {
+    const avg = d.skus.reduce((a, s) => a + s.confidence, 0) / d.skus.length;
+    const alerts = d.skus.filter((s) => s.risk === "alert").length;
+    return { avg, alerts };
+  };
+  const a = stat(active);
+  const b = stat(alt);
+  const dAvg = b.avg - a.avg;
+  const dAlerts = b.alerts - a.alerts;
+  const isRule = mode === "rule";
+  return (
+    <div
+      className="max-w-[1440px] mx-auto px-3 sm:px-5 py-2 flex flex-wrap items-center gap-x-3 gap-y-1"
+      style={{ borderBottom: `1px solid ${C.borderSoft}`, fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted }}
+    >
+      <span style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 0.6, color: isRule ? C.teal : C.amber }}>
+        SCORING · {isRule ? "RULE-BASED" : "CALIBRATED"}
+      </span>
+      <span>
+        Every score on this screen uses{" "}
+        {isRule
+          ? "the hand-set event weights from the Model tab."
+          : "those same weights multiplied by illustrative calibration factors."}{" "}
+        Fleet confidence <span style={{ fontFamily: FONT_MONO, color: C.text }}>{a.avg.toFixed(1)}%</span>,{" "}
+        <span style={{ fontFamily: FONT_MONO, color: C.text }}>{a.alerts}</span> SKUs in Alert.
+      </span>
+      <button
+        onClick={onSwitch}
+        style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", color: C.text, textAlign: "left" }}
+      >
+        <span style={{ borderBottom: `1px dotted ${C.textFaint}` }}>
+          Switch to {isRule ? "Calibrated" : "Rule-based"}:{" "}
+          <span style={{ fontFamily: FONT_MONO, color: dAvg < 0 ? C.coral : dAvg > 0 ? C.teal : C.textFaint }}>
+            {dAvg >= 0 ? "+" : ""}{dAvg.toFixed(1)} pts
+          </span>
+          ,{" "}
+          <span style={{ fontFamily: FONT_MONO, color: dAlerts > 0 ? C.coral : dAlerts < 0 ? C.teal : C.textFaint }}>
+            {dAlerts >= 0 ? "+" : ""}{dAlerts}
+          </span>{" "}
+          Alert SKUs
+        </span>
+      </button>
+      <button
+        onClick={onExplain}
+        style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 0.5, color: C.teal }}
+      >
+        WHY TWO MODES →
+      </button>
     </div>
   );
 }
@@ -2052,6 +2132,7 @@ function IntegrationsView({ skus }) {
         <div className="flex items-center gap-2 mb-4">
           <Satellite size={16} color={C.teal} />
           <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }}>Live AIS vessel feed (simulated)</h3>
+          <LiveDot label="STREAMING" />
         </div>
         <div className="flex flex-col gap-2">
           {pings.map((p, i) => (
@@ -2572,6 +2653,14 @@ function LogicView({ weights, thresholds }) {
           <HelpLink icon={Settings} title="Settings" body="Adjust risk thresholds, event weights, the compliance watchlist, and data-quality controls like source reliability and the missing-scan grace window." />
           <HelpLink icon={Satellite} title="Integrations" body="Illustrates what a live AIS vessel feed and an ERP sync (SAP/Oracle) would surface once this prototype is connected to real systems — see above for exactly what's fake and how to make it real." />
         </div>
+        <p
+          className="mt-4 p-3 rounded-md text-xs"
+          style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_BODY, color: C.textMuted, lineHeight: 1.6 }}
+        >
+          In one line: this is a rule-based confidence engine plus a what-if simulator, running on
+          synthetic shipment data with illustrative AIS/EDI feeds. Nothing here is connected to a live
+          carrier, terminal or customs system.
+        </p>
       </Panel>
     </div>
   );
@@ -2859,7 +2948,13 @@ export default function App() {
         </div>
       </header>
 
-
+      <ModeBar
+        mode={mode}
+        active={viewData}
+        alt={altData}
+        onSwitch={() => setMode(altMode)}
+        onExplain={() => setTab("logic")}
+      />
 
       <main className="px-3 sm:px-5 py-4 max-w-[1440px] mx-auto">
         <TabIntro tab={tab} />
