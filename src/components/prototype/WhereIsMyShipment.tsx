@@ -701,141 +701,324 @@ function Panel({ children, style, className = "" }) {
 }
 
 /* ---------------------------------------------------------
-   DASHBOARD VIEW
+   CONTROL TOWER (DASHBOARD)
+   Status strip -> map + priority queue -> event stream + trend.
+   Every number in the strip is a filter, not a decoration.
 --------------------------------------------------------- */
-function DashboardView({ shipments, containers, skus, onSelectSku }) {
+function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
   const kpis = useMemo(() => {
     const avgConfidence = skus.reduce((a, s) => a + s.confidence, 0) / skus.length;
-    const disrupted = containers.filter((c) =>
-      c.timeline.some((e) => e.delta < 0)
-    ).length;
-    const critical = skus.filter((s) => s.risk === "alert").length;
-    const highRiskWaters = shipments.filter((s) => s.routeZones && s.routeZones.length > 0).length;
-    const lateShipments = shipments.filter((s) => s.isLate).length;
-    return {
-      totalShipments: shipments.length,
-      avgConfidence,
-      disruptedContainers: disrupted,
-      criticalSkus: critical,
-      highRiskWaters,
-      lateShipments,
-    };
-  }, [shipments, containers, skus]);
-
-  const riskCounts = useMemo(() => {
-    const counts = { clear: 0, monitor: 0, alert: 0 };
-    skus.forEach((s) => counts[s.risk]++);
-    return [
-      { name: "Clear", value: counts.clear, color: C.teal },
-      { name: "Monitor", value: counts.monitor, color: C.amber },
-      { name: "Alert", value: counts.alert, color: C.coral },
-    ];
+    const needAttention = new Set(skus.filter((s) => s.risk === "alert").map((s) => s.containerId)).size;
+    const customsDelayed = new Set(
+      skus.filter((s) => s.timeline.some((e) => e.type === "customsHold")).map((s) => s.containerId)
+    ).size;
+    const highValueAtRisk = new Set(
+      skus.filter((s) => s.risk !== "clear" && s.value >= 20000).map((s) => s.containerId)
+    ).size;
+    return { avgConfidence, needAttention, customsDelayed, highValueAtRisk };
   }, [skus]);
 
-  const distByCategory = useMemo(() => {
-    const map = {};
-    skus.forEach((s) => {
-      map[s.category] = map[s.category] || { name: s.category, avg: 0, count: 0 };
-      map[s.category].avg += s.confidence;
-      map[s.category].count += 1;
+  const priority = useMemo(
+    () => [...skus].filter((s) => s.risk !== "clear").sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 6),
+    [skus]
+  );
+
+  const recentEvents = useMemo(() => {
+    const rows = [];
+    for (const c of containers) {
+      for (const e of c.timeline) rows.push({ ...e, containerId: c.id, shipmentId: c.shipmentId });
+    }
+    return rows.sort((a, b) => b.timestamp - a.timestamp).slice(0, 9);
+  }, [containers]);
+
+  const trend = useMemo(() => {
+    const sample = skus.filter((_, i) => i % 3 === 0);
+    const days = [];
+    for (let d = 13; d >= 0; d--) {
+      const cutoff = NOW.getTime() - d * 86400000;
+      let sum = 0;
+      for (const s of sample) {
+        let v = 100;
+        for (const e of s.timeline) {
+          if (e.timestamp.getTime() <= cutoff) v = e.confidenceAfter;
+          else break;
+        }
+        sum += v;
+      }
+      days.push({ d, value: sum / sample.length });
+    }
+    return days;
+  }, [skus]);
+
+  // Feed health. One source is deliberately behind — real control towers
+  // always have one, and pretending otherwise is the tell of a fake demo.
+  const feeds = useMemo(() => {
+    const latest = {};
+    for (const c of containers) {
+      for (const e of c.timeline) {
+        const src = e.source || "Carrier EDI";
+        if (!latest[src] || e.timestamp > latest[src]) latest[src] = e.timestamp;
+      }
+    }
+    return DATA_SOURCES.map((src) => {
+      const ts = latest[src];
+      const hrs = ts ? (NOW.getTime() - ts.getTime()) / 3600000 : null;
+      return { src, hrs };
     });
-    return Object.values(map).map((c) => ({ name: c.name, avg: Math.round(c.avg / c.count) }));
-  }, [skus]);
+  }, [containers]);
+  const staleFeed = feeds.filter((f) => f.hrs === null || f.hrs > 6).sort((a, b) => (b.hrs ?? 999) - (a.hrs ?? 999))[0];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <ReadThisFirst />
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-        <KpiCard label="Active Shipments" value={kpis.totalShipments} icon={Ship} />
-        <KpiCard label="Avg. Confidence" value={`${kpis.avgConfidence.toFixed(1)}%`} icon={Gauge} accent={C.teal} />
-        <KpiCard label="Disrupted Containers" value={kpis.disruptedContainers} icon={ContainerIcon} accent={C.amber} />
-        <KpiCard label="Critical SKUs" value={kpis.criticalSkus} icon={AlertTriangle} accent={C.coral} />
-        <KpiCard label="Through High-Risk Waters" value={kpis.highRiskWaters} icon={MapPinned} accent={C.coral} />
-        <KpiCard label="Late Shipments" value={kpis.lateShipments} icon={Clock} accent={C.amber} />
+
+      {/* --- status strip: four numbers, each one a way in --- */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatusTile
+          count={kpis.needAttention} unit="containers" label="Need attention today"
+          sub="Confidence has fallen below your alert line."
+          color={C.coral} onClick={() => onDrill("alert")}
+        />
+        <StatusTile
+          count={kpis.customsDelayed} unit="containers" label="Sitting in customs"
+          sub="Held for inspection. Mostly clears itself."
+          color={C.amber} onClick={() => onDrill("customs")}
+        />
+        <StatusTile
+          count={kpis.highValueAtRisk} unit="containers" label="High-value at risk"
+          sub="Over $20k of stock behind weak evidence."
+          color={C.coral} onClick={() => onDrill("highvalue")}
+        />
+        <StatusTile
+          count={`${kpis.avgConfidence.toFixed(0)}%`} unit="" label="Fleet-wide confidence"
+          sub="Average across every SKU in transit."
+          color={kpis.avgConfidence >= 85 ? C.teal : C.amber} onClick={() => onDrill("all")}
+        />
       </div>
 
-      <div className="grid md:grid-cols-5 gap-4 min-w-0">
-        <Panel className="p-5 md:col-span-3">
-          <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }} className="mb-4">
-            Average confidence by category
-          </h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={distByCategory} margin={{ left: -20 }}>
-              <CartesianGrid stroke={C.borderSoft} vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: C.textMuted, fontSize: 11 }} axisLine={{ stroke: C.border }} tickLine={false} interval={0} angle={-20} textAnchor="end" height={60} />
-              <YAxis domain={[0, 100]} tick={{ fill: C.textMuted, fontSize: 11 }} axisLine={{ stroke: C.border }} tickLine={false} />
-              <Tooltip contentStyle={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: FONT_MONO, fontSize: 12 }} />
-              <Bar dataKey="avg" fill={C.teal} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      {staleFeed && (
+        <div
+          className="flex items-start gap-2 rounded-lg px-3 py-2"
+          style={{ background: C.panelAlt, border: `1px solid ${C.amberDim}` }}
+        >
+          <Radio size={13} color={C.amber} className="mt-0.5 shrink-0" />
+          <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.textMuted, lineHeight: 1.5 }}>
+            <span style={{ color: C.amber, fontFamily: FONT_MONO, fontSize: 11 }}>FEED BEHIND · </span>
+            Last <Term term={staleFeed.src}>{staleFeed.src}</Term> message was{" "}
+            {staleFeed.hrs === null ? "never received" : `${Math.floor(staleFeed.hrs)}h ${Math.round((staleFeed.hrs % 1) * 60)}m ago`}.
+            Anything relying on it is older than it looks.
+          </span>
+        </div>
+      )}
+
+      {/* --- asymmetric body: map dominates, queue rides alongside --- */}
+      <div className="grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-4 items-start">
+        <RouteMap shipments={shipments} skus={skus} />
+        <Panel className="p-0 overflow-hidden">
+          <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
+            <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>What I'd chase first</h3>
+            <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 2 }}>
+              Ranked by value, urgency and how thin the evidence is.
+            </p>
+          </div>
+          <div>
+            {priority.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => onSelectSku(s.id)}
+                className="w-full text-left px-4 py-3 block"
+                style={{ borderBottom: `1px solid ${C.borderSoft}`, background: "transparent" }}
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: C.text }}>{s.id}</span>
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: RISK_META[s.risk].color }}>
+                    {s.confidence.toFixed(0)}%
+                  </span>
+                </div>
+                <div style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted, marginTop: 1 }} className="truncate">
+                  {s.customer || "\u2014 customer not reported"} · ${s.value.toLocaleString()} · {s.urgency} urgency
+                </div>
+                <div
+                  style={{
+                    fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted, lineHeight: 1.5,
+                    marginTop: 6, paddingLeft: 8, borderLeft: `2px solid ${RISK_META[s.risk].color}`,
+                  }}
+                >
+                  {operatorNote(s)}
+                </div>
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => onDrill("all")}
+            className="w-full px-4 py-2.5 flex items-center justify-center gap-1.5"
+            style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.teal, background: "transparent" }}
+          >
+            OPEN FULL EXCEPTION QUEUE <ChevronRight size={12} />
+          </button>
+        </Panel>
+      </div>
+
+      {/* --- ground truth: what actually happened, and where the line is going --- */}
+      <div className="grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-4 items-start">
+        <Panel className="p-0 overflow-hidden">
+          <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
+            <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>Coming in off the feeds</h3>
+          </div>
+          <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <table className="w-full" style={{ fontFamily: FONT_BODY, fontSize: 12, minWidth: 460 }}>
+              <tbody>
+                {recentEvents.map((e, i) => (
+                  <tr key={i} style={{ borderTop: i ? `1px solid ${C.borderSoft}` : "none" }}>
+                    <td className="px-4 py-1.5 whitespace-nowrap align-top" style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>
+                      {e.timestamp.toISOString().slice(5, 16).replace("T", " ")}
+                    </td>
+                    <td className="py-1.5 pr-3 align-top" style={{ color: C.text }}>
+                      <Glossed text={e.label} />
+                    </td>
+                    <td className="py-1.5 pr-3 whitespace-nowrap align-top" style={{ color: C.textMuted }}>{e.location}</td>
+                    <td className="py-1.5 pr-4 text-right whitespace-nowrap align-top" style={{ fontFamily: FONT_MONO, fontSize: 11, color: e.delta < 0 ? C.coral : C.textFaint }}>
+                      {e.delta < 0 ? e.delta : "\u2014"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Panel>
 
-        <Panel className="p-5 md:col-span-2">
-          <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }} className="mb-4">
-            SKU risk breakdown
-          </h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie data={riskCounts} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={3}>
-                {riskCounts.map((r, i) => <Cell key={i} fill={r.color} stroke={C.panel} />)}
-              </Pie>
-              <Tooltip contentStyle={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: FONT_MONO, fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="flex justify-center gap-4 mt-1">
-            {riskCounts.map((r) => (
-              <div key={r.name} className="flex items-center gap-1.5" style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textMuted }}>
-                <span className="w-2 h-2 rounded-full" style={{ background: r.color }} /> {r.name} ({r.value})
-              </div>
-            ))}
+        <Panel className="p-4">
+          <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>Confidence, last 14 days</h3>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 2, marginBottom: 10 }}>
+            Fleet average. A falling line means evidence is decaying faster than it's being replaced.
+          </p>
+          <Sparkline data={trend} />
+          <div className="flex items-baseline justify-between mt-3">
+            <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>14D AGO {trend[0].value.toFixed(0)}%</span>
+            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: C.teal }}>{trend[trend.length - 1].value.toFixed(1)}%</span>
           </div>
         </Panel>
       </div>
-
-      <Panel className="p-5">
-        <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }} className="mb-4">
-          Shipments in transit
-        </h3>
-        <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY, minWidth: 520 }}>
-            <thead>
-              <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
-                <th className="pb-2 font-normal">Shipment</th>
-                <th className="pb-2 font-normal">Vessel</th>
-                <th className="pb-2 font-normal">Route</th>
-                <th className="pb-2 font-normal">ETA</th>
-                <th className="pb-2 font-normal">Current Event</th>
-                <th className="pb-2 font-normal">Containers</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shipments.slice(0, 12).map((s) => (
-                <tr key={s.id} style={{ borderTop: `1px solid ${C.borderSoft}` }}>
-                  <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.text }}>{s.id}</td>
-                  <td className="py-2" style={{ color: C.text }}>{s.vessel}</td>
-                  <td className="py-2" style={{ color: C.textMuted }}>{s.origin} → {s.destination}</td>
-                  <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>{s.eta.toISOString().slice(0, 10)}</td>
-                  <td className="py-2" style={{ color: C.textMuted }}><Glossed text={s.currentEvent} /></td>
-                  <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>{s.containerIds.length}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
     </div>
   );
 }
 
-function KpiCard({ label, value, icon: Icon, accent = C.text }) {
+function StatusTile({ count, unit, label, sub, color, onClick }) {
   return (
-    <Panel className="p-4 flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <span style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{label}</span>
-        <Icon size={16} color={accent} />
+    <button
+      onClick={onClick}
+      className="text-left rounded-xl p-4 flex flex-col gap-1 h-full"
+      style={{ background: C.panel, border: `1px solid ${C.border}`, borderLeft: `3px solid ${color}` }}
+    >
+      <div className="flex items-baseline gap-1.5">
+        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 30, lineHeight: 1, color }}>{count}</span>
+        {unit && <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.textFaint }}>{unit}</span>}
       </div>
-      <span style={{ fontFamily: FONT_DISPLAY, color: accent, fontSize: 26 }}>{value}</span>
+      <span style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.text }}>{label}</span>
+      <span style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, lineHeight: 1.45 }}>{sub}</span>
+      <span className="mt-auto pt-2 flex items-center gap-1" style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.teal }}>
+        SEE THEM <ChevronRight size={10} />
+      </span>
+    </button>
+  );
+}
+
+/* Lanes and ports on an equirectangular frame. Positions are approximate —
+   this is a situational display, not a navigation chart. */
+function RouteMap({ shipments, skus }) {
+  const lanes = useMemo(() => {
+    const worstByShipment = {};
+    for (const s of skus) {
+      const cur = worstByShipment[s.shipmentId];
+      if (cur === undefined || s.confidence < cur) worstByShipment[s.shipmentId] = s.confidence;
+    }
+    return shipments
+      .filter((s) => PORT_COORDS[s.origin] && PORT_COORDS[s.destination])
+      .map((s) => ({ ...s, worst: worstByShipment[s.id] ?? 100 }))
+      .sort((a, b) => a.worst - b.worst)
+      .slice(0, 22);
+  }, [shipments, skus]);
+
+  const px = (lon) => lon + 180;
+  const py = (lat) => 90 - lat;
+
+  return (
+    <Panel className="p-0 overflow-hidden">
+      <div className="px-4 py-3 flex items-center justify-between gap-3" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
+        <div className="min-w-0">
+          <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }}>Where everything is right now</h3>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 2 }}>
+            22 busiest lanes, coloured by the weakest SKU on board.
+          </p>
+        </div>
+        <div className="hidden sm:flex gap-3 shrink-0">
+          {[["Clear", C.teal], ["Monitor", C.amber], ["Alert", C.coral]].map(([l, c]) => (
+            <span key={l} className="flex items-center gap-1.5" style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textMuted }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />{l}
+            </span>
+          ))}
+        </div>
+      </div>
+      <svg viewBox="0 12 360 150" style={{ width: "100%", display: "block", background: "#060B0F" }}>
+        {[-120, -60, 0, 60, 120].map((lon) => (
+          <line key={lon} x1={px(lon)} x2={px(lon)} y1={12} y2={162} stroke={C.borderSoft} strokeWidth={0.3} />
+        ))}
+        {[60, 30, 0, -30].map((lat) => (
+          <line key={lat} x1={0} x2={360} y1={py(lat)} y2={py(lat)} stroke={C.borderSoft} strokeWidth={0.3} />
+        ))}
+        <line x1={0} x2={360} y1={py(0)} y2={py(0)} stroke={C.border} strokeWidth={0.5} strokeDasharray="2 3" />
+
+        {lanes.map((s) => {
+          const [ax, ay] = [px(PORT_COORDS[s.origin][0]), py(PORT_COORDS[s.origin][1])];
+          const [bx, by] = [px(PORT_COORDS[s.destination][0]), py(PORT_COORDS[s.destination][1])];
+          const risk = riskFromConfidence(s.worst);
+          const color = RISK_META[risk].color;
+          const mx = (ax + bx) / 2;
+          const my = (ay + by) / 2 - Math.abs(bx - ax) * 0.13;
+          return (
+            <path
+              key={s.id}
+              d={`M ${ax} ${ay} Q ${mx} ${my} ${bx} ${by}`}
+              fill="none"
+              stroke={color}
+              strokeWidth={risk === "alert" ? 0.8 : 0.5}
+              strokeOpacity={risk === "clear" ? 0.32 : 0.75}
+            />
+          );
+        })}
+
+        {Object.entries(PORT_COORDS).map(([name, [lon, lat]]) => (
+          <g key={name}>
+            <circle cx={px(lon)} cy={py(lat)} r={1.6} fill={C.teal} fillOpacity={0.9} />
+            <text
+              x={px(lon) + 3} y={py(lat) + 1.6}
+              fill={C.textMuted} fontSize={4} fontFamily="'IBM Plex Mono', monospace"
+            >
+              {name}
+            </text>
+          </g>
+        ))}
+      </svg>
     </Panel>
+  );
+}
+
+function Sparkline({ data }) {
+  const values = data.map((d) => d.value);
+  const min = Math.min(...values) - 1;
+  const max = Math.max(...values) + 1;
+  const pts = values.map((v, i) => [
+    (i / (values.length - 1)) * 100,
+    30 - ((v - min) / (max - min)) * 26,
+  ]);
+  const line = pts.map(([x, y], i) => `${i ? "L" : "M"} ${x.toFixed(2)} ${y.toFixed(2)}`).join(" ");
+  const area = `${line} L 100 32 L 0 32 Z`;
+  return (
+    <svg viewBox="0 0 100 34" preserveAspectRatio="none" style={{ width: "100%", height: 76, display: "block" }}>
+      <path d={area} fill={C.teal} fillOpacity={0.08} />
+      <path d={line} fill="none" stroke={C.teal} strokeWidth={0.9} vectorEffect="non-scaling-stroke" />
+      <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r={1.2} fill={C.teal} />
+    </svg>
   );
 }
 
