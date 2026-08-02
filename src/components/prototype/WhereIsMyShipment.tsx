@@ -2907,7 +2907,7 @@ function SearchView({ data, selectedId, onSelectId }) {
                   {selected.description} · {selected.customer} · qty {selected.quantity} · ${selected.value.toLocaleString()}
                 </span>
               </div>
-              <ConfidenceGauge value={selected.confidence} thresholds={thresholds} />
+              <ConfidenceGauge value={selected.confidence} thresholds={thresholds} timeline={selected.timeline} />
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
