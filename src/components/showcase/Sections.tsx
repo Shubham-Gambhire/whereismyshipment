@@ -143,6 +143,33 @@ const highlights = [
   ["Performance considerations", "Memoised aggregates keep large SKU sets responsive on a single render pass."],
 ];
 
+export function Highlights() {
+  return (
+    <Section
+      id="highlights"
+      eyebrow="Engineering"
+      title="What makes this prototype interesting"
+      className="pb-28 md:pb-40"
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        {highlights.map(([title, body], i) => (
+          <Reveal key={title} delay={i * 70}>
+            <Panel hover className="h-full p-6">
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono text-[11px] text-teal">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h3 className="text-base font-medium text-foreground">{title}</h3>
+              </div>
+              <p className="mt-2 pl-8 text-sm leading-relaxed text-muted-foreground">{body}</p>
+            </Panel>
+          </Reveal>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
 const phases = [
   {
     icon: Database,
