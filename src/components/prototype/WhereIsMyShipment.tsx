@@ -1156,12 +1156,17 @@ function RouteMap({ shipments, skus }) {
       const cur = worstByShipment[s.shipmentId];
       if (cur === undefined || s.confidence < cur) worstByShipment[s.shipmentId] = s.confidence;
     }
-    return shipments
+    const scored = shipments
       .filter((s) => PORT_COORDS[s.origin] && PORT_COORDS[s.destination])
       .map((s) => ({ ...s, worst: worstByShipment[s.id] ?? 100 }))
-      .sort((a, b) => a.worst - b.worst)
-      .slice(0, 22);
+      .sort((a, b) => a.worst - b.worst);
+    // Keep the worst lanes, but always carry a few healthy ones so the map
+    // reads as a fleet picture rather than a wall of red.
+    const flagged = scored.filter((s) => riskFromConfidence(s.worst) !== "clear").slice(0, 16);
+    const clear = scored.filter((s) => riskFromConfidence(s.worst) === "clear").slice(-6);
+    return [...clear, ...flagged];
   }, [shipments, skus]);
+
 
   const px = (lon) => lon + 180;
   const py = (lat) => 90 - lat;
