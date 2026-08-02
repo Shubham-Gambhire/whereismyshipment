@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 
-const App = lazy(() => import("@/components/prototype/WhereIsMyShipment.jsx"));
+const App = lazy(() => import("@/components/prototype/WhereIsMyShipment"));
 
 const title = "Where Is My Shipment — Interactive Prototype";
 const description =
