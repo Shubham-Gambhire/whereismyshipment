@@ -772,7 +772,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku }) {
                   <td className="py-2" style={{ color: C.text }}>{s.vessel}</td>
                   <td className="py-2" style={{ color: C.textMuted }}>{s.origin} → {s.destination}</td>
                   <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>{s.eta.toISOString().slice(0, 10)}</td>
-                  <td className="py-2" style={{ color: C.textMuted }}>{s.currentEvent}</td>
+                  <td className="py-2" style={{ color: C.textMuted }}><Glossed text={s.currentEvent} /></td>
                   <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>{s.containerIds.length}</td>
                 </tr>
               ))}
@@ -992,7 +992,7 @@ function ExceptionsView({ skus, onSelectSku }) {
                     <td className="py-2" style={{ fontFamily: FONT_MONO, color: C.textMuted }}>{s.containerId}</td>
                     <td className="py-2" style={{ fontFamily: FONT_MONO, color: RISK_META[s.risk].color }}>{s.confidence.toFixed(0)}%</td>
                     <td className="py-2"><RiskBadge risk={s.risk} /></td>
-                    <td className="py-2" style={{ color: C.textMuted, fontSize: 12 }}>{displayEvent?.label}</td>
+                    <td className="py-2" style={{ color: C.textMuted, fontSize: 12 }}><Glossed text={displayEvent?.label} /></td>
                   </tr>
                 );
               })}
@@ -1224,7 +1224,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                         >
                           {checked && <CheckCircle2 size={13} color={C.bg} />}
                         </span>
-                        <span style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13, flex: 1 }}>{o.label}</span>
+                        <span style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13, flex: 1 }}><Glossed text={o.label} /></span>
                         <span style={{ fontFamily: FONT_MONO, color, fontSize: 12 }}>
                           {eventCategory === "recovery" ? `+${o.delta}` : o.delta}
                         </span>
@@ -1451,7 +1451,7 @@ function SettingsView({
           {DISRUPTIONS.map((d) => (
             <div key={d.key} className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
               <div className="flex-1 min-w-[220px]">
-                <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>{d.label}</div>
+                <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}><Glossed text={d.label} /></div>
                 <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
                   {EVENT_REASONS[d.key]}
                 </div>
@@ -1953,7 +1953,7 @@ function LogicView({ weights, thresholds }) {
                 {row.side}
               </span>
               <div className="flex-1 min-w-[200px]">
-                <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>{row.label}</div>
+                <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}><Glossed text={row.label} /></div>
                 <div style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.5, marginTop: 2 }}>{row.body}</div>
               </div>
             </div>
@@ -2004,7 +2004,7 @@ function LogicView({ weights, thresholds }) {
                 const calWeight = Math.round(ruleWeight * factor);
                 return (
                   <tr key={d.key} style={{ borderTop: `1px solid ${C.borderSoft}` }}>
-                    <td className="py-2.5" style={{ color: C.text }}>{d.label}</td>
+                    <td className="py-2.5" style={{ color: C.text }}><Glossed text={d.label} /></td>
                     <td className="py-2.5" style={{ fontFamily: FONT_MONO, color: C.coral }}>{ruleWeight}</td>
                     <td className="py-2.5" style={{ fontFamily: FONT_MONO, color: C.amber }}>
                       {calWeight} <span style={{ color: C.textFaint, fontSize: 11 }}>({factor}×)</span>
