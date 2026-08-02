@@ -1474,28 +1474,20 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
           {sku && (
             <>
               <Panel className="p-6">
-                <div className="flex flex-wrap items-center justify-between gap-6">
-                  <div className="flex items-center gap-6">
-                    <div className="flex flex-col items-center gap-1">
-                      <ConfidenceGauge value={sku.confidence} thresholds={thresholds} />
-                      <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>CURRENT (real)</span>
+                <div className="flex flex-wrap items-start justify-between gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 min-w-0 flex-1">
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint, letterSpacing: 0.8 }}>CURRENT</span>
+                      <ConfidenceGauge value={sku.confidence} thresholds={thresholds} timeline={sku.timeline} />
                     </div>
-                    <div className="flex flex-col items-center gap-1.5">
-                      <ChevronRight size={20} color={C.textFaint} />
-                      {simEvents.length > 0 && (
-                        <span
-                          className="px-2 py-0.5 rounded-full text-xs whitespace-nowrap"
-                          style={{ fontFamily: FONT_MONO, color: C.amber, border: `1px solid ${C.amber}` }}
-                        >
-                          {simEvents.length} applied
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <ConfidenceGauge value={finalConfidence} thresholds={thresholds} />
-                      <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>PROJECTED</span>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint, letterSpacing: 0.8 }}>
+                        PROJECTED{simEvents.length > 0 ? ` · ${simEvents.length} applied` : ""}
+                      </span>
+                      <ConfidenceGauge value={finalConfidence} thresholds={thresholds} timeline={simTimeline} />
                     </div>
                   </div>
+
                   <div className="flex flex-col gap-2 items-start">
                     <RiskBadge risk={finalRisk} />
                     <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: C.textMuted }}>{sku.id} · {sku.customer}</span>
