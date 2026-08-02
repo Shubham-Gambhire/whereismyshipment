@@ -10,7 +10,7 @@ import {
   Gauge, Radio, Container as ContainerIcon,
   HelpCircle, XCircle, CircleDollarSign, Layers, Scale, TrendingDown,
   Bell, Satellite, Database, RotateCcw, PlayCircle, Sliders, X, CheckCircle2,
-  Settings, CloudRain, MapPinned, Clock
+  Settings, CloudRain, MapPinned, Clock, Home
 } from "lucide-react";
 import { Glossed, Term, ConfidenceAdvice, ReadThisFirst, TabIntro } from "./Onboarding";
 
@@ -980,6 +980,66 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
   );
 }
 
+/* The masthead for the Overview tab: enlarged animated anchor, the project
+   name at full size, and the one-line framing of what the tool actually is. */
+function BrandMark() {
+  return (
+    <div className="mb-5 flex items-start gap-3 sm:gap-4">
+      <span className="relative grid place-items-center shrink-0" style={{ width: 58, height: 58 }}>
+        <span
+          className="live-halo absolute inset-0 rounded-2xl"
+          style={{ border: `1px solid ${C.teal}`, animation: "live-halo 3.2s ease-out infinite" }}
+        />
+        <span
+          className="grid place-items-center"
+          style={{ width: 58, height: 58, borderRadius: 14, background: C.tealDim, border: `1px solid ${C.teal}55` }}
+        >
+          <Anchor size={30} color={C.teal} className="logo-bob" style={{ animation: "logo-bob 4s ease-in-out infinite" }} />
+        </span>
+      </span>
+      <span className="min-w-0">
+        <h1
+          style={{
+            fontFamily: FONT_DISPLAY,
+            fontSize: "clamp(26px, 5.4vw, 40px)",
+            fontWeight: 600,
+            letterSpacing: -0.9,
+            lineHeight: 1.08,
+            color: C.text,
+            margin: 0,
+          }}
+        >
+          Where Is My Shipment
+        </h1>
+        <span
+          className="relative block overflow-hidden"
+          style={{ height: 2, marginTop: 8, maxWidth: 320, background: C.borderSoft, borderRadius: 1 }}
+        >
+          <span
+            className="logo-sweep absolute inset-y-0"
+            style={{
+              width: "42%",
+              background: `linear-gradient(90deg, transparent, ${C.teal}, transparent)`,
+              animation: "logo-sweep 3.6s cubic-bezier(0.45,0,0.2,1) infinite",
+            }}
+          />
+        </span>
+        <p
+          style={{
+            fontFamily: FONT_MONO,
+            fontSize: 12,
+            letterSpacing: 0.4,
+            color: C.textMuted,
+            marginTop: 8,
+          }}
+        >
+          A probabilistic SKU location framework
+        </p>
+      </span>
+    </div>
+  );
+}
+
 /* A blinking indicator for anything fed by a (simulated) live stream. */
 function LiveDot({ color = C.coral, label, size = 7 }) {
   return (
@@ -1726,6 +1786,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
 function SettingsView({
   weights, setWeights, thresholds, setThresholds, watchlist, setWatchlist,
   sourceReliability, setSourceReliability, graceHours, setGraceHours, previewSkus,
+  mode, setMode,
 }) {
   const [watchlistInput, setWatchlistInput] = useState("");
 
@@ -1827,6 +1888,50 @@ function SettingsView({
           >
             <RotateCcw size={12} /> RESET TO DEFAULT
           </button>
+        </div>
+      </Panel>
+
+      <Panel className="p-6">
+        <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }} className="mb-1">
+          Scoring model
+        </h3>
+        <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 13, lineHeight: 1.5 }} className="mb-4 max-w-2xl">
+          Which model drives every score in the tool. Rule-based uses the weights you set below exactly as
+          written. Calibrated multiplies those same weights by an illustrative adjustment factor, as a
+          production system would once it had outcome history to learn from.
+        </p>
+        <div className="flex flex-col gap-2.5 max-w-2xl">
+          {[
+            ["rule", "Rule-based", "Hand-set weights, fully transparent. What you see below is exactly what is applied."],
+            ["calibrated", "Calibrated", "Same weights × a hypothetical calibration factor derived from past outcomes."],
+          ].map(([key, label, desc]) => {
+            const active = mode === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setMode(key)}
+                className="flex items-start gap-3 p-3 rounded-md text-left"
+                style={{
+                  background: C.panelAlt,
+                  border: `1px solid ${active ? C.teal : C.border}`,
+                  cursor: "pointer",
+                }}
+              >
+                <span
+                  className="mt-1 shrink-0 rounded-full grid place-items-center"
+                  style={{ width: 13, height: 13, border: `1px solid ${active ? C.teal : C.textFaint}` }}
+                >
+                  {active && <span className="rounded-full" style={{ width: 6, height: 6, background: C.teal }} />}
+                </span>
+                <span>
+                  <span style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5, fontWeight: active ? 600 : 400, display: "block" }}>
+                    {label}
+                  </span>
+                  <span style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.45 }}>{desc}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </Panel>
 
@@ -2840,40 +2945,22 @@ export default function App() {
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="relative grid place-items-center shrink-0" style={{ width: 34, height: 34 }}>
-              <span
-                className="live-halo absolute inset-0 rounded-lg"
-                style={{ border: `1px solid ${C.teal}`, animation: "live-halo 3.2s ease-out infinite" }}
-              />
-              <span
-                className="grid place-items-center"
-                style={{ width: 34, height: 34, borderRadius: 8, background: C.tealDim, border: `1px solid ${C.teal}55` }}
-              >
-                <Anchor size={19} color={C.teal} className="logo-bob" style={{ animation: "logo-bob 4s ease-in-out infinite" }} />
-              </span>
-            </span>
-            <span className="min-w-0">
-              <span
-                style={{ fontFamily: FONT_DISPLAY, fontSize: 15, fontWeight: 600, letterSpacing: -0.2, display: "block" }}
-                className="truncate"
-              >
-                Where Is My Shipment
-              </span>
-              <span
-                className="relative block overflow-hidden"
-                style={{ height: 1.5, marginTop: 3, background: C.borderSoft, borderRadius: 1 }}
-              >
-                <span
-                  className="logo-sweep absolute inset-y-0"
-                  style={{
-                    width: "42%",
-                    background: `linear-gradient(90deg, transparent, ${C.teal}, transparent)`,
-                    animation: "logo-sweep 3.6s cubic-bezier(0.45,0,0.2,1) infinite",
-                  }}
-                />
-              </span>
-            </span>
-            <span className="hidden sm:inline" style={{ width: 1, height: 14, background: C.border }} />
+            <button
+              onClick={() => setTab("dashboard")}
+              className="flex items-center gap-1.5 shrink-0 px-2 py-1 rounded-md"
+              style={{
+                fontFamily: FONT_MONO,
+                fontSize: 10.5,
+                letterSpacing: 0.5,
+                color: tab === "dashboard" ? C.text : C.textMuted,
+                background: "transparent",
+                border: `1px solid ${C.border}`,
+                cursor: "pointer",
+              }}
+              aria-label="Back to Overview"
+            >
+              <Home size={12} /> HOME
+            </button>
             <span
               className="hidden sm:inline truncate"
               style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: 0.3 }}
@@ -2921,42 +3008,21 @@ export default function App() {
               );
             })}
           </nav>
-
-          <div className="flex shrink-0 mb-1.5 overflow-hidden" style={{ border: `1px solid ${C.border}`, borderRadius: 5 }}>
-            {[
-              ["rule", "RULE", "Fixed weights from Settings — see Logic for how they are set"],
-              ["calibrated", "CALIBRATED", "Settings weights × a hypothetical calibration factor — see Logic"],
-            ].map(([key, label, tip]) => (
-              <button
-                key={key}
-                onClick={() => setMode(key)}
-                className="px-2.5 py-1 text-xs whitespace-nowrap"
-                style={{
-                  fontFamily: FONT_MONO,
-                  fontSize: 10,
-                  letterSpacing: 0.5,
-                  background: mode === key ? C.panelAlt : "transparent",
-                  border: "none",
-                  color: mode === key ? C.text : C.textFaint,
-                }}
-                title={tip}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
         </div>
       </header>
 
-      <ModeBar
-        mode={mode}
-        active={viewData}
-        alt={altData}
-        onSwitch={() => setMode(altMode)}
-        onExplain={() => setTab("logic")}
-      />
+      {tab === "dashboard" && (
+        <ModeBar
+          mode={mode}
+          active={viewData}
+          alt={altData}
+          onSwitch={() => setMode(altMode)}
+          onExplain={() => setTab("logic")}
+        />
+      )}
 
       <main className="px-3 sm:px-5 py-4 max-w-[1440px] mx-auto">
+        {tab === "dashboard" && <BrandMark />}
         <TabIntro tab={tab} />
         {tab === "dashboard" && (
           <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} onDrill={drillToExceptions} />
@@ -2978,6 +3044,7 @@ export default function App() {
             sourceReliability={sourceReliability} setSourceReliability={setSourceReliability}
             graceHours={graceHours} setGraceHours={setGraceHours}
             previewSkus={viewData.skus}
+            mode={mode} setMode={setMode}
           />
         )}
         {tab === "integrations" && (
