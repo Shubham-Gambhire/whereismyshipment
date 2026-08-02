@@ -1226,7 +1226,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                         >
                           {checked && <CheckCircle2 size={13} color={C.bg} />}
                         </span>
-                        <span style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13, flex: 1 }}><Glossed text={o.label} /></span>
+                        <span style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13, flex: 1 }}>{o.label}</span>
                         <span style={{ fontFamily: FONT_MONO, color, fontSize: 12 }}>
                           {eventCategory === "recovery" ? `+${o.delta}` : o.delta}
                         </span>
