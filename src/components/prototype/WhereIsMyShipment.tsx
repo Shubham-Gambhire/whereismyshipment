@@ -765,6 +765,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
     const latest = {};
     for (const c of containers) {
       for (const e of c.timeline) {
+        if (e.timestamp.getTime() > NOW.getTime()) continue;
         const src = e.source || "Carrier EDI";
         if (!latest[src] || e.timestamp > latest[src]) latest[src] = e.timestamp;
       }
@@ -967,9 +968,9 @@ function RouteMap({ shipments, skus }) {
           ))}
         </div>
       </div>
-      <svg viewBox="0 25 360 112" style={{ width: "100%", display: "block", background: "#060B0F" }}>
+      <svg viewBox="0 25 360 100" style={{ width: "100%", display: "block", background: "#060B0F" }}>
         {[-120, -60, 0, 60, 120].map((lon) => (
-          <line key={lon} x1={px(lon)} x2={px(lon)} y1={25} y2={137} stroke={C.borderSoft} strokeWidth={0.3} />
+          <line key={lon} x1={px(lon)} x2={px(lon)} y1={25} y2={125} stroke={C.borderSoft} strokeWidth={0.3} />
         ))}
         {[60, 30, 0, -30].map((lat) => (
           <line key={lat} x1={0} x2={360} y1={py(lat)} y2={py(lat)} stroke={C.borderSoft} strokeWidth={0.3} />
