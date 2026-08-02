@@ -2464,7 +2464,6 @@ export default function App() {
 
 
       <main className="p-6 max-w-6xl mx-auto">
-        <TabIntro tab={tab} />
         {tab === "dashboard" && (
           <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} />
         )}
