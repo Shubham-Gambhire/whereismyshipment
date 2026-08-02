@@ -2887,66 +2887,70 @@ function SearchView({ data, selectedId, onSelectId }) {
   const shipment = selected ? shipments.find((s) => s.id === selected.shipmentId) : null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-5 min-w-0">
-      <div className="md:col-span-2 flex flex-col gap-3 min-w-0 w-full overflow-hidden">
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] gap-4 min-w-0">
+      <div className="flex flex-col gap-2 min-w-0 w-full overflow-hidden">
         <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" color={C.textMuted} />
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" color={C.textFaint} />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search SKU, customer, or category…"
+            placeholder="Search SKU, customer, category…"
             aria-label="Search SKU, customer, or category"
-            className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-md outline-none text-sm"
-            style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
+            className="w-full min-w-0 pl-8 pr-3 py-1.5 outline-none"
+            style={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontFamily: FONT_MONO, fontSize: 12 }}
           />
         </div>
-        <div className="flex flex-col gap-2 max-h-[520px] overflow-y-auto pr-1">
-          {results.map((s) => {
+        <div
+          className="overflow-y-auto overflow-hidden"
+          style={{ maxHeight: 620, border: `1px solid ${C.border}`, borderRadius: 6, background: C.panel }}
+        >
+          {results.map((s, i) => {
             const active = selected && s.id === selected.id;
             const m = RISK_META[s.risk];
             return (
               <button
                 key={s.id}
                 onClick={() => onSelectId(s.id)}
-                className="text-left p-3 rounded-md flex items-center justify-between gap-2"
+                className="text-left w-full px-3 py-2 flex items-center justify-between gap-2"
                 style={{
-                  background: active ? C.panelAlt : C.panel,
-                  border: `1px solid ${active ? m.color : C.border}`,
+                  background: active ? C.panelAlt : "transparent",
+                  border: "none",
+                  borderTop: i ? `1px solid ${C.borderSoft}` : "none",
+                  borderLeft: `2px solid ${active ? m.color : "transparent"}`,
+                  transition: "background 150ms ease",
                 }}
               >
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="truncate" style={{ fontFamily: FONT_MONO, color: C.text, fontSize: 13 }}>{s.id}</span>
-                  <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.customer}</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="truncate" style={{ fontFamily: FONT_MONO, color: C.text, fontSize: 11.5 }}>{s.id}</span>
+                  <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11 }}>{s.customer}</span>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <span style={{ fontFamily: FONT_MONO, color: m.color, fontSize: 13 }}>{s.confidence.toFixed(0)}%</span>
-                  <ChevronRight size={14} color={C.textFaint} />
-                </div>
+                <span style={{ fontFamily: FONT_MONO, color: m.color, fontSize: 11.5 }}>{s.confidence.toFixed(0)}%</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="md:col-span-3">
+      <div className="min-w-0">
         {selected ? (
-          <Panel className="p-6 flex flex-col gap-6">
+          <Panel className="p-4 flex flex-col gap-4">
             <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Package size={16} color={C.teal} />
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: C.text }}>{selected.id}</span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 16, color: C.text }}>{selected.id}</span>
                   <RiskBadge risk={selected.risk} />
                 </div>
-                <span style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 13 }}>
+                <span style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>
                   {selected.description} · {selected.customer} · qty {selected.quantity} · ${selected.value.toLocaleString()}
                 </span>
               </div>
               <ConfidenceGauge value={selected.confidence} thresholds={thresholds} timeline={selected.timeline} />
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div
+              className="grid grid-cols-2 sm:grid-cols-4 gap-y-2 py-1"
+              style={{ borderTop: `1px solid ${C.borderSoft}`, borderBottom: `1px solid ${C.borderSoft}` }}
+            >
               <InfoCell label="Container" value={selected.containerId} />
               <InfoCell label="Pallet" value={selected.palletId} />
               <InfoCell label="Shipment" value={selected.shipmentId} />
@@ -2955,6 +2959,7 @@ function SearchView({ data, selectedId, onSelectId }) {
                 value={shipment ? `${shipment.eta.toISOString().slice(0, 10)}${shipment.isLate ? " (LATE)" : ""}` : "—"}
                 highlight={shipment?.isLate}
               />
+
               {shipment && shipment.eta.getTime() !== shipment.plannedEta.getTime() && (
                 <InfoCell label="Originally Due" value={shipment.plannedEta.toISOString().slice(0, 10)} />
               )}
