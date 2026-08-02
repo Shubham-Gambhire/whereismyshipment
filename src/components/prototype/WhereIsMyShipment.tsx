@@ -2939,11 +2939,36 @@ function SearchView({ data, selectedId, onSelectId }) {
             </div>
 
             <div>
-              <h4 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }} className="mb-4 flex items-center gap-2">
-                <Radio size={14} color={C.teal} /> Chain of custody
-              </h4>
+              <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+                <h4 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13, fontWeight: 600, letterSpacing: 0.2 }}>
+                  Chain of custody
+                </h4>
+                <div className="flex flex-wrap gap-3" style={{ fontFamily: FONT_MONO, fontSize: 9.5, color: C.textFaint }}>
+                  {[
+                    ["VERIFIED", C.teal],
+                    ["EXCEPTION", C.coral],
+                    ["DELAYED", C.amber],
+                    ["PREDICTED", C.textMuted],
+                  ].map(([l, col]) => (
+                    <span key={l} className="flex items-center gap-1">
+                      <span style={{ width: 6, height: 6, borderRadius: 3, background: col, display: "inline-block" }} />
+                      {l}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div
+                className="hidden md:grid gap-x-3 pl-5 pr-1 pb-1 md:grid-cols-[1fr_120px_86px_54px]"
+                style={{ fontFamily: FONT_MONO, fontSize: 9.5, letterSpacing: 0.7, color: C.textFaint }}
+              >
+                <span>EVENT · LOCATION · EVIDENCE</span>
+                <span>TIMESTAMP (UTC)</span>
+                <span>STATE</span>
+                <span className="text-right">CONF.</span>
+              </div>
               <CustodyLadder timeline={selected.timeline} thresholds={thresholds} />
             </div>
+
           </Panel>
         ) : (
           <Panel className="p-8 flex items-center justify-center text-sm" style={{ color: C.textMuted }}>
