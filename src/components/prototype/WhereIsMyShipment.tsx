@@ -1405,7 +1405,7 @@ function SettingsView({
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full shrink-0"
             style={{ fontFamily: FONT_MONO, color: C.textMuted, border: `1px solid ${C.border}` }}
           >
-            <RotateCcw size={12} /> RESET TO PRD DEFAULTS
+            <RotateCcw size={12} /> RESET TO DEFAULT
           </button>
         </div>
       </Panel>
@@ -1415,7 +1415,7 @@ function SettingsView({
           Risk thresholds
         </h3>
         <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 13, lineHeight: 1.5 }} className="mb-4 max-w-2xl">
-          Where the line falls between Clear, Monitor, and Alert. PRD default is 95% / 80%.
+          Where the line falls between Clear, Monitor, and Alert. Default is 95% / 80%.
         </p>
         <div className="grid sm:grid-cols-2 gap-4 max-w-xl">
           <label className="flex items-center justify-between gap-3 p-3 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
