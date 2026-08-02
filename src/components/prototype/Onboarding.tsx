@@ -12,19 +12,19 @@ import { HelpCircle, Info, ChevronDown } from "lucide-react";
 --------------------------------------------------------- */
 
 const C = {
-  bg: "#080D12",
-  panel: "#0E1821",
-  panelAlt: "#142631",
-  border: "#1E3342",
-  teal: "#2DD4BF",
-  amber: "#FBBF24",
-  coral: "#F87171",
-  text: "#E8F1F2",
-  textMuted: "#7F9BA3",
-  textFaint: "#4E6870",
+  bg: "#0B0F14",
+  panel: "#111721",
+  panelAlt: "#161E29",
+  border: "#1F2833",
+  teal: "#3B9E8F",
+  amber: "#C99A3B",
+  coral: "#D2604F",
+  text: "#E4E9EF",
+  textMuted: "#8A96A5",
+  textFaint: "#5A6675",
 };
-const FONT_DISPLAY = "'Sora', sans-serif";
-const FONT_BODY = "'Manrope', sans-serif";
+const FONT_DISPLAY = "'Inter', sans-serif";
+const FONT_BODY = "'Inter', sans-serif";
 const FONT_MONO = "'IBM Plex Mono', monospace";
 
 /* Jargon → plain English. Longest keys are matched first. */
@@ -133,7 +133,7 @@ export function Term({ term, children }) {
             width: 268,
             background: C.panelAlt,
             border: `1px solid ${C.border}`,
-            borderRadius: 10,
+            borderRadius: 6,
             padding: "10px 12px",
             boxShadow: "0 18px 40px -18px rgba(0,0,0,0.9)",
             fontFamily: FONT_BODY,
@@ -217,7 +217,7 @@ export function ConfidenceAdvice({ value, thresholds }) {
   const a = confidenceAdvice(value, thresholds);
   return (
     <div
-      className="mt-3 rounded-lg px-3 py-2"
+      className="mt-3 rounded-md px-3 py-2"
       style={{ background: C.panelAlt, border: `1px solid ${C.border}`, maxWidth: 260 }}
     >
       <div style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: a.color, letterSpacing: 0.6 }}>
@@ -268,16 +268,21 @@ export function TabIntro({ tab }) {
   const intro = TAB_INTROS[tab];
   if (!intro) return null;
   return (
-    <div
-      className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3"
-      style={{ background: C.panel, border: `1px solid ${C.border}` }}
+    <p
+      className="mb-4 pb-2"
+      style={{
+        fontFamily: FONT_BODY,
+        fontSize: 12.5,
+        lineHeight: 1.5,
+        color: C.textMuted,
+        margin: 0,
+        maxWidth: 760,
+        borderBottom: `1px solid ${C.border}`,
+      }}
     >
-      <Info size={15} color={C.teal} className="mt-0.5 shrink-0" />
-      <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.6, color: C.textMuted, margin: 0 }}>
-        <span style={{ color: C.text, fontWeight: 600 }}>{intro.q} </span>
-        {intro.a}
-      </p>
-    </div>
+      <span style={{ color: C.text, fontWeight: 600 }}>{intro.q} </span>
+      {intro.a}
+    </p>
   );
 }
 
@@ -287,16 +292,16 @@ export function TabIntro({ tab }) {
 export function ReadThisFirst() {
   const [open, setOpen] = useState(true);
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
+    <div className="rounded-md overflow-hidden" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+        className="flex w-full items-center justify-between gap-3 px-3.5 py-2 text-left"
         style={{ background: "transparent", border: "none", cursor: "pointer" }}
       >
         <span className="flex items-center gap-2 min-w-0">
           <HelpCircle size={15} color={C.teal} className="shrink-0" />
-          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 14, color: C.text }} className="truncate">
+          <span style={{ fontFamily: FONT_DISPLAY, fontSize: 12.5, fontWeight: 600, color: C.text }} className="truncate">
             First time here?
           </span>
         </span>
@@ -307,13 +312,13 @@ export function ReadThisFirst() {
         />
       </button>
       {open && (
-        <div className="px-4 pb-4">
-          <p style={{ fontFamily: FONT_BODY, fontSize: 13, lineHeight: 1.65, color: C.textMuted, margin: 0, maxWidth: 680 }}>
+        <div className="px-3.5 pb-3">
+          <p style={{ fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.55, color: C.textMuted, margin: 0, maxWidth: 720 }}>
             A shipment is tracked as one container, but a business sells individual products — so when something
             goes wrong, nobody can say which product is affected or how sure we even are. Every product here starts
             at 100% and loses points each time the evidence for its location weakens.
           </p>
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
             {[
               ["Clear", C.teal, "well evidenced, keep the date"],
               ["Monitor", C.amber, "thinning, warn the customer"],
@@ -325,7 +330,7 @@ export function ReadThisFirst() {
               </span>
             ))}
           </div>
-          <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 10 }}>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, marginTop: 7 }}>
             Dotted underlines explain the jargon. All data is synthetic.
           </p>
         </div>

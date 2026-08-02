@@ -18,24 +18,24 @@ import { Glossed, Term, ConfidenceAdvice, ReadThisFirst, TabIntro } from "./Onbo
    DESIGN TOKENS
 --------------------------------------------------------- */
 const C = {
-  bg: "#080D12",
-  panel: "#0E1821",
-  panelAlt: "#142631",
-  border: "#1E3342",
-  borderSoft: "#162630",
-  teal: "#2DD4BF",
-  tealDim: "#1A5C54",
-  amber: "#FBBF24",
-  amberDim: "#5C4A22",
-  coral: "#F87171",
-  coralDim: "#5C2A24",
-  text: "#E8F1F2",
-  textMuted: "#7F9BA3",
-  textFaint: "#4E6870",
+  bg: "#0B0F14",
+  panel: "#111721",
+  panelAlt: "#161E29",
+  border: "#1F2833",
+  borderSoft: "#19212B",
+  teal: "#3B9E8F",
+  tealDim: "#16302E",
+  amber: "#C99A3B",
+  amberDim: "#332916",
+  coral: "#D2604F",
+  coralDim: "#331A16",
+  text: "#E4E9EF",
+  textMuted: "#8A96A5",
+  textFaint: "#5A6675",
 };
 
-const FONT_DISPLAY = "'Sora', sans-serif";
-const FONT_BODY = "'Manrope', sans-serif";
+const FONT_DISPLAY = "'Inter', sans-serif";
+const FONT_BODY = "'Inter', sans-serif";
 const FONT_MONO = "'IBM Plex Mono', monospace";
 
 /* ---------------------------------------------------------
@@ -591,100 +591,152 @@ function RiskBadge({ risk }) {
   );
 }
 
-function ConfidenceGauge({ value, thresholds }) {
+// Confidence is never just a number: the meter is paired with the evidence
+// that produced it — contributors, sources, gaps and the recommended action.
+function ConfidenceGauge({ value, thresholds, timeline }) {
   const risk = riskFromConfidence(value, thresholds);
   const color = RISK_META[risk].color;
-  const circumference = 2 * Math.PI * 54;
-  const offset = circumference * (1 - value / 100);
+
+  const detractors = (timeline ?? [])
+    .filter((e) => e.delta < 0)
+    .sort((a, b) => a.delta - b.delta)
+    .slice(0, 3);
+  const sources = Array.from(new Set((timeline ?? []).map((e) => e.source).filter(Boolean)));
+  const gaps = (timeline ?? []).filter((e) => e.dataQualityStatus === "pending" || e.type === "missingScan");
+
   return (
-    <div className="flex flex-col items-center">
-    <div className="relative flex items-center justify-center" style={{ width: 140, height: 140 }}>
-      <svg width={140} height={140} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={70} cy={70} r={54} stroke={C.border} strokeWidth={10} fill="none" />
-        <circle
-          cx={70} cy={70} r={54} stroke={color} strokeWidth={10} fill="none"
-          strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
-          style={{ transition: "stroke-dashoffset 0.6s ease" }}
-        />
-      </svg>
-      <div className="absolute flex flex-col items-center">
-        <span style={{ fontFamily: FONT_MONO, fontSize: 30, color, fontWeight: 600 }}>
-          {value.toFixed(0)}%
-        </span>
-        <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.textMuted, letterSpacing: 1 }}>
-          CONFIDENCE
-        </span>
+    <div style={{ width: "100%", maxWidth: 300 }}>
+      <div className="flex items-baseline justify-between">
+        <span style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 0.8, color: C.textFaint }}>CONFIDENCE</span>
+        <span style={{ fontFamily: FONT_MONO, fontSize: 22, fontWeight: 600, color }}>{value.toFixed(0)}%</span>
       </div>
-    </div>
-    <ConfidenceAdvice value={value} thresholds={thresholds} />
+      <div className="mt-1.5 h-1.5 w-full overflow-hidden" style={{ background: C.panelAlt, borderRadius: 2 }}>
+        <div
+          style={{ width: `${value}%`, height: "100%", background: color, transition: "width 200ms ease" }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between" style={{ fontFamily: FONT_MONO, fontSize: 9.5, color: C.textFaint }}>
+        <span>alert &lt; {thresholds.monitor}</span>
+        <span>clear ≥ {thresholds.clear}</span>
+      </div>
+
+      <dl className="mt-3 flex flex-col gap-1.5">
+        <EvidenceRow label="Drivers">
+          {detractors.length === 0
+            ? "No penalties applied — clean chain."
+            : detractors.map((d) => `${d.label} ${d.delta}`).join(" · ")}
+        </EvidenceRow>
+        <EvidenceRow label="Sources">{sources.length ? sources.join(" · ") : "—"}</EvidenceRow>
+        <EvidenceRow label="Gaps">
+          {gaps.length ? `${gaps.length} unreported milestone${gaps.length > 1 ? "s" : ""}` : "None open"}
+        </EvidenceRow>
+      </dl>
+
+      <ConfidenceAdvice value={value} thresholds={thresholds} />
     </div>
   );
 }
 
-// The signature element: a vertical "custody ladder" showing every event
-// in a SKU's chain of custody, with each node colored by the confidence
-// level immediately after that event — a visual signal trace rather than
-// a plain list, echoing how a control tower reads a tracking feed.
+function EvidenceRow({ label, children }) {
+  return (
+    <div className="flex gap-2" style={{ fontSize: 11.5, lineHeight: 1.45 }}>
+      <dt style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint, width: 58, flexShrink: 0, paddingTop: 1 }}>
+        {label.toUpperCase()}
+      </dt>
+      <dd style={{ fontFamily: FONT_BODY, color: C.textMuted, margin: 0 }}>{children}</dd>
+    </div>
+  );
+}
+
+/* Milestone state, derived from what the model actually knows about the event. */
+function custodyState(ev) {
+  if (ev.simulated) return { key: "predicted", label: "PREDICTED", color: C.textMuted };
+  if (ev.dataQualityStatus === "resolved") return { key: "resolved", label: "RESOLVED", color: C.teal };
+  if (ev.dataQualityStatus === "pending") return { key: "delayed", label: "DELAYED", color: C.amber };
+  if (ev.delta < 0) return { key: "exception", label: "EXCEPTION", color: C.coral };
+  return { key: "verified", label: "VERIFIED", color: C.teal };
+}
+
+// The signature view: one dense row per milestone carrying event, time,
+// location, evidence source, state and the confidence it left behind.
 function CustodyLadder({ timeline, thresholds }) {
   return (
-    <div className="relative pl-6">
-      <div
-        className="absolute left-[7px] top-2 bottom-2 w-px"
-        style={{ background: C.border }}
-      />
-      <div className="flex flex-col gap-5">
-        {timeline.map((ev, i) => {
-          const risk = riskFromConfidence(ev.confidenceAfter, thresholds);
-          const color = RISK_META[risk].color;
-          const isDisruption = ev.delta < 0;
-          return (
-            <div key={i} className="relative">
+    <div className="relative" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
+      {timeline.map((ev, i) => {
+        const st = custodyState(ev);
+        const risk = riskFromConfidence(ev.confidenceAfter, thresholds);
+        const confColor = RISK_META[risk].color;
+        const dashed = st.key === "predicted" || st.key === "delayed";
+        return (
+          <div
+            key={i}
+            className="group grid gap-x-3 gap-y-1 py-2 pl-5 pr-1 md:grid-cols-[1fr_120px_86px_54px] md:items-baseline"
+            style={{ borderBottom: `1px solid ${C.borderSoft}`, transition: "background 150ms ease" }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = C.panelAlt)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            {/* rail */}
+            <span
+              className="absolute left-[5px] w-px"
+              style={{
+                background: C.border,
+                top: i === 0 ? 14 : 0,
+                bottom: i === timeline.length - 1 ? "auto" : 0,
+                height: i === timeline.length - 1 ? 14 : undefined,
+                display: "none",
+              }}
+            />
+            <div className="relative min-w-0">
               <span
-                className="absolute -left-6 top-0.5 w-3.5 h-3.5 rounded-full"
-                style={{ background: C.bg, border: `2px solid ${color}` }}
+                className="absolute"
+                style={{
+                  left: -18,
+                  top: 5,
+                  width: 7,
+                  height: 7,
+                  borderRadius: 4,
+                  background: dashed ? "transparent" : st.color,
+                  border: `1px solid ${st.color}`,
+                }}
               />
-              <div className="flex items-baseline justify-between gap-3 flex-wrap">
-                <span
-                  style={{
-                    fontFamily: FONT_BODY,
-                    fontWeight: isDisruption ? 600 : 500,
-                    color: isDisruption ? color : C.text,
-                    fontSize: 14,
-                  }}
-                >
-                  <Glossed text={ev.label} />
-                  {ev.dataQualityStatus === "pending" && (
-                    <span style={{ fontFamily: FONT_MONO, fontSize: 10, marginLeft: 8, color: C.amber, border: `1px solid ${C.amber}`, borderRadius: 4, padding: "1px 5px" }}>
-                      PENDING · GRACE WINDOW
-                    </span>
-                  )}
-                  {ev.dataQualityStatus === "resolved" && (
-                    <span style={{ fontFamily: FONT_MONO, fontSize: 10, marginLeft: 8, color: C.teal, border: `1px solid ${C.teal}`, borderRadius: 4, padding: "1px 5px" }}>
-                      SELF-HEALED
-                    </span>
-                  )}
-                  {ev.simulated && (
-                    <span style={{ fontFamily: FONT_MONO, fontSize: 10, marginLeft: 8, color: C.amber, border: `1px solid ${C.amber}`, borderRadius: 4, padding: "1px 5px" }}>
-                      SIMULATED
-                    </span>
-                  )}
-                  {isDisruption && (
-                    <span style={{ fontFamily: FONT_MONO, fontSize: 12, marginLeft: 8, color }}>
-                      {ev.delta}
-                    </span>
-                  )}
-                </span>
-                <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>
-                  {ev.timestamp.toISOString().slice(0, 16).replace("T", " ")} · {ev.location}
-                </span>
+              <div style={{ fontFamily: FONT_BODY, fontSize: 13, color: C.text, fontWeight: st.key === "exception" ? 600 : 400 }}>
+                <Glossed text={ev.label} />
+                {ev.delta < 0 && (
+                  <span style={{ fontFamily: FONT_MONO, fontSize: 11.5, marginLeft: 6, color: C.coral }}>{ev.delta}</span>
+                )}
               </div>
-              <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textMuted, marginTop: 2 }}>
-                confidence → <span style={{ color }}>{ev.confidenceAfter}%</span>
+              <div style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, marginTop: 1 }}>
+                {ev.location} · {ev.source ?? "no source"}
               </div>
             </div>
-          );
-        })}
-      </div>
+
+            <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textMuted }}>
+              {ev.timestamp.toISOString().slice(0, 16).replace("T", " ")}
+            </div>
+
+            <div>
+              <span
+                style={{
+                  fontFamily: FONT_MONO,
+                  fontSize: 9.5,
+                  letterSpacing: 0.6,
+                  color: st.color,
+                  border: `1px solid ${st.color}44`,
+                  background: `${st.color}14`,
+                  borderRadius: 3,
+                  padding: "1px 5px",
+                }}
+              >
+                {st.label}
+              </span>
+            </div>
+
+            <div className="md:text-right" style={{ fontFamily: FONT_MONO, fontSize: 12, color: confColor }}>
+              {ev.confidenceAfter}%
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -692,8 +744,13 @@ function CustodyLadder({ timeline, thresholds }) {
 function Panel({ children, style, className = "" }) {
   return (
     <div
-      className={`rounded-xl ${className}`}
-      style={{ background: C.panel, border: `1px solid ${C.border}`, ...style }}
+      className={`rounded-md ${className}`}
+      style={{
+        background: C.panel,
+        border: `1px solid ${C.borderSoft}`,
+        boxShadow: "0 1px 2px rgba(0,0,0,0.35)",
+        ...style,
+      }}
     >
       {children}
     </div>
@@ -779,36 +836,40 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
   const staleFeed = [...feeds].sort((a, b) => (b.hrs ?? 9999) - (a.hrs ?? 9999))[0];
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <ReadThisFirst />
 
       {/* --- status strip: four numbers, each one a way in --- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div
+        className="grid grid-cols-2 lg:grid-cols-4 overflow-hidden"
+        style={{ border: `1px solid ${C.border}`, borderRadius: 6, background: C.panel }}
+      >
         <StatusTile
-          count={kpis.needAttention} unit="containers" label="Need attention today"
-          sub="Confidence has fallen below your alert line."
-          color={C.coral} onClick={() => onDrill("alert")}
+          count={kpis.needAttention} unit="containers" label="Need attention"
+          sub="Confidence below the alert line."
+          color={C.coral} onClick={() => onDrill("alert")} first
         />
         <StatusTile
-          count={kpis.customsDelayed} unit="containers" label="Sitting in customs"
-          sub="Held for inspection. Mostly clears itself."
+          count={kpis.customsDelayed} unit="containers" label="In customs"
+          sub="Held for inspection. Mostly self-clears."
           color={C.amber} onClick={() => onDrill("customs")}
         />
         <StatusTile
-          count={kpis.highValueAtRisk} unit="containers" label="High-value at risk"
-          sub="Over $20k of stock behind weak evidence."
+          count={kpis.highValueAtRisk} unit="containers" label="High value at risk"
+          sub="Over $20k behind weak evidence."
           color={C.coral} onClick={() => onDrill("highvalue")}
         />
         <StatusTile
-          count={`${kpis.avgConfidence.toFixed(0)}%`} unit="" label="Fleet-wide confidence"
-          sub="Average across every SKU in transit."
+          count={`${kpis.avgConfidence.toFixed(0)}%`} unit="" label="Fleet confidence"
+          sub="Mean across every SKU in transit."
           color={kpis.avgConfidence >= 85 ? C.teal : C.amber} onClick={() => onDrill("all")}
         />
       </div>
 
+
       {staleFeed && (
         <div
-          className="flex items-start gap-2 rounded-lg px-3 py-2"
+          className="flex items-start gap-2 rounded-md px-3 py-2"
           style={{ background: C.panelAlt, border: `1px solid ${C.amberDim}` }}
         >
           <Radio size={13} color={C.amber} className="mt-0.5 shrink-0" />
@@ -916,25 +977,33 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
   );
 }
 
-function StatusTile({ count, unit, label, sub, color, onClick }) {
+function StatusTile({ count, unit, label, sub, color, onClick, first }) {
+  const [hover, setHover] = useState(false);
   return (
     <button
       onClick={onClick}
-      className="text-left rounded-xl p-4 flex flex-col gap-1 h-full"
-      style={{ background: C.panel, border: `1px solid ${C.border}`, borderLeft: `3px solid ${color}` }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className="text-left px-3.5 py-2.5 flex flex-col gap-0.5 h-full"
+      style={{
+        background: hover ? C.panelAlt : "transparent",
+        border: "none",
+        borderLeft: first ? "none" : `1px solid ${C.borderSoft}`,
+        borderTop: `2px solid ${color}`,
+        transition: "background 150ms ease",
+      }}
     >
       <div className="flex items-baseline gap-1.5">
-        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 30, lineHeight: 1, color }}>{count}</span>
-        {unit && <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.textFaint }}>{unit}</span>}
+        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 21, fontWeight: 600, lineHeight: 1.1, color }}>{count}</span>
+        <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.text, fontWeight: 500 }}>{label}</span>
       </div>
-      <span style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.text }}>{label}</span>
-      <span style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, lineHeight: 1.45 }}>{sub}</span>
-      <span className="mt-auto pt-2 flex items-center gap-1" style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.teal }}>
-        SEE THEM <ChevronRight size={10} />
+      <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.textFaint, lineHeight: 1.4 }}>
+        {unit ? `${unit} · ` : ""}{sub}
       </span>
     </button>
   );
 }
+
 
 /* Lanes and ports on an equirectangular frame. Positions are approximate —
    this is a situational display, not a navigation chart. */
@@ -1037,12 +1106,17 @@ function Sparkline({ data }) {
 
 function InfoCell({ label, value, highlight }) {
   return (
-    <div className="p-3 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
-      <div style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 11 }}>{label}</div>
-      <div style={{ fontFamily: FONT_MONO, color: highlight ? C.coral : C.text, fontSize: 13, marginTop: 2 }}>{value}</div>
+    <div className="px-3 py-1.5" style={{ borderLeft: `1px solid ${C.borderSoft}` }}>
+      <div style={{ fontFamily: FONT_MONO, color: C.textFaint, fontSize: 9.5, letterSpacing: 0.6, textTransform: "uppercase" }}>
+        {label}
+      </div>
+      <div style={{ fontFamily: FONT_MONO, color: highlight ? C.coral : C.text, fontSize: 12, marginTop: 1, lineHeight: 1.35 }}>
+        {value}
+      </div>
     </div>
   );
 }
+
 
 /* ---------------------------------------------------------
    EXCEPTIONS VIEW
@@ -1136,7 +1210,7 @@ function ExceptionsView({ skus, onSelectSku, preset }) {
             </button>
           ))}
         </div>
-        <div className="flex rounded-lg overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
+        <div className="flex rounded-md overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
           <button
             onClick={() => setSortMode("confidence")}
             className="px-3 py-1.5 text-xs"
@@ -1386,7 +1460,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search SKU or customer…"
-              className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-lg outline-none text-sm"
+              className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-md outline-none text-sm"
               style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
             />
           </div>
@@ -1398,7 +1472,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                 <button
                   key={s.id}
                   onClick={() => selectSku(s.id)}
-                  className="text-left p-3 rounded-lg flex items-center justify-between gap-2"
+                  className="text-left p-3 rounded-md flex items-center justify-between gap-2"
                   style={{ background: active ? C.panelAlt : C.panel, border: `1px solid ${active ? m.color : C.border}` }}
                 >
                   <div className="flex flex-col gap-0.5 min-w-0">
@@ -1417,28 +1491,20 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
           {sku && (
             <>
               <Panel className="p-6">
-                <div className="flex flex-wrap items-center justify-between gap-6">
-                  <div className="flex items-center gap-6">
-                    <div className="flex flex-col items-center gap-1">
-                      <ConfidenceGauge value={sku.confidence} thresholds={thresholds} />
-                      <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>CURRENT (real)</span>
+                <div className="flex flex-wrap items-start justify-between gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 min-w-0 flex-1">
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint, letterSpacing: 0.8 }}>CURRENT</span>
+                      <ConfidenceGauge value={sku.confidence} thresholds={thresholds} timeline={sku.timeline} />
                     </div>
-                    <div className="flex flex-col items-center gap-1.5">
-                      <ChevronRight size={20} color={C.textFaint} />
-                      {simEvents.length > 0 && (
-                        <span
-                          className="px-2 py-0.5 rounded-full text-xs whitespace-nowrap"
-                          style={{ fontFamily: FONT_MONO, color: C.amber, border: `1px solid ${C.amber}` }}
-                        >
-                          {simEvents.length} applied
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <ConfidenceGauge value={finalConfidence} thresholds={thresholds} />
-                      <span style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>PROJECTED</span>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <span style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.textFaint, letterSpacing: 0.8 }}>
+                        PROJECTED{simEvents.length > 0 ? ` · ${simEvents.length} applied` : ""}
+                      </span>
+                      <ConfidenceGauge value={finalConfidence} thresholds={thresholds} timeline={previewTimeline} />
                     </div>
                   </div>
+
                   <div className="flex flex-col gap-2 items-start">
                     <RiskBadge risk={finalRisk} />
                     <span style={{ fontFamily: FONT_MONO, fontSize: 12, color: C.textMuted }}>{sku.id} · {sku.customer}</span>
@@ -1466,7 +1532,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                   layer on more.
                 </div>
 
-                <div className="flex rounded-lg overflow-hidden mb-3" style={{ border: `1px solid ${C.border}`, width: "fit-content" }}>
+                <div className="flex rounded-md overflow-hidden mb-3" style={{ border: `1px solid ${C.border}`, width: "fit-content" }}>
                   <button
                     onClick={() => setEventCategory("disruption")}
                     className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs"
@@ -1492,7 +1558,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                         key={o.key}
                         onClick={() => toggleQueued(o.key)}
                         title={EVENT_REASONS[o.key] || ""}
-                        className="text-left p-3 rounded-lg flex items-center gap-2.5"
+                        className="text-left p-3 rounded-md flex items-center gap-2.5"
                         style={{ background: checked ? C.panelAlt : "transparent", border: `1px solid ${checked ? color : C.border}` }}
                       >
                         <span
@@ -1511,7 +1577,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                 </div>
 
                 {queuedOptions.length > 0 && (
-                  <div className="mt-4 p-3 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+                  <div className="mt-4 p-3 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
                     <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }} className="mb-2">
                       QUEUED — {queuedOptions.length} EVENT{queuedOptions.length > 1 ? "S" : ""}
                     </div>
@@ -1542,7 +1608,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                 <button
                   onClick={runSimulation}
                   disabled={queuedOptions.length === 0}
-                  className="flex items-center justify-center gap-2 w-full mt-4 py-2.5 rounded-lg text-sm"
+                  className="flex items-center justify-center gap-2 w-full mt-4 py-2.5 rounded-md text-sm"
                   style={{
                     fontFamily: FONT_DISPLAY,
                     background: queuedOptions.length > 0 ? C.teal : C.panelAlt,
@@ -1692,14 +1758,14 @@ function SettingsView({
           Where the line falls between Clear, Monitor, and Alert. Default is 95% / 80%.
         </p>
         <div className="grid sm:grid-cols-2 gap-4 max-w-xl">
-          <label className="flex items-center justify-between gap-3 p-3 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <label className="flex items-center justify-between gap-3 p-3 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <span style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13 }}>Clear at or above</span>
             <div className="flex items-center gap-1">
               <input type="number" value={thresholds.clear} onChange={(e) => setClear(e.target.value)} style={inputStyle} />
               <span style={{ fontFamily: FONT_MONO, color: C.textMuted, fontSize: 13 }}>%</span>
             </div>
           </label>
-          <label className="flex items-center justify-between gap-3 p-3 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <label className="flex items-center justify-between gap-3 p-3 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <span style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13 }}>Monitor at or above</span>
             <div className="flex items-center gap-1">
               <input type="number" value={thresholds.monitor} onChange={(e) => setMonitor(e.target.value)} style={inputStyle} />
@@ -1707,7 +1773,7 @@ function SettingsView({
             </div>
           </label>
         </div>
-        <div className="mt-4 p-3 rounded-lg text-sm" style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_MONO, fontSize: 12.5 }}>
+        <div className="mt-4 p-3 rounded-md text-sm" style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_MONO, fontSize: 12.5 }}>
           <span style={{ color: C.coral }}>Alert: below {thresholds.monitor}%</span>
           <span style={{ color: C.textFaint }}> · </span>
           <span style={{ color: C.amber }}>Monitor: {thresholds.monitor}–{thresholds.clear - 1}%</span>
@@ -1726,7 +1792,7 @@ function SettingsView({
         </p>
         <div className="flex flex-col gap-2.5">
           {DISRUPTIONS.map((d) => (
-            <div key={d.key} className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+            <div key={d.key} className="flex items-center justify-between gap-4 p-3 rounded-md flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
               <div className="flex-1 min-w-[220px]">
                 <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}><Glossed text={d.label} /></div>
                 <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
@@ -1755,7 +1821,7 @@ function SettingsView({
         </p>
         <div className="flex flex-col gap-2.5">
           {ROUTE_ZONES.map((z) => (
-            <div key={z.key} className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+            <div key={z.key} className="flex items-center justify-between gap-4 p-3 rounded-md flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
               <div className="flex-1 min-w-[220px]">
                 <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>
                   {z.label} <span style={{ color: C.textFaint, fontSize: 11 }}>· {z.category}</span>
@@ -1772,7 +1838,7 @@ function SettingsView({
               />
             </div>
           ))}
-          <div className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="flex items-center justify-between gap-4 p-3 rounded-md flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex-1 min-w-[220px]">
               <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>Watchlist touch</div>
               <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
@@ -1805,12 +1871,12 @@ function SettingsView({
               onKeyDown={(e) => e.key === "Enter" && addWatchlistEntry()}
               placeholder="e.g. a port or country name"
               aria-label="Add a location to the compliance watchlist"
-              className="flex-1 px-3 py-2 rounded-lg outline-none text-sm"
+              className="flex-1 px-3 py-2 rounded-md outline-none text-sm"
               style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
             />
             <button
               onClick={addWatchlistEntry}
-              className="px-4 py-2 rounded-lg text-sm shrink-0"
+              className="px-4 py-2 rounded-md text-sm shrink-0"
               style={{ fontFamily: FONT_BODY, color: C.teal, border: `1px solid ${C.tealDim}`, background: C.panelAlt }}
             >
               Add
@@ -1847,7 +1913,7 @@ function SettingsView({
           disruption actually happened. See the Logic tab for how each of these works.
         </p>
 
-        <div className="flex items-center justify-between gap-3 p-3 rounded-lg flex-wrap mb-4" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+        <div className="flex items-center justify-between gap-3 p-3 rounded-md flex-wrap mb-4" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
           <div className="flex-1 min-w-[220px]">
             <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>Missing-scan grace window</div>
             <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
@@ -1861,7 +1927,7 @@ function SettingsView({
         </div>
 
         <div className="flex flex-col gap-2.5 mb-5">
-          <div className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="flex items-center justify-between gap-4 p-3 rounded-md flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex-1 min-w-[220px]">
               <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>Data Conflict</div>
               <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
@@ -1870,7 +1936,7 @@ function SettingsView({
             </div>
             <input type="number" value={weights.dataConflict} onChange={(e) => setWeight("dataConflict", e.target.value)} style={inputStyle} />
           </div>
-          <div className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="flex items-center justify-between gap-4 p-3 rounded-md flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex-1 min-w-[220px]">
               <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>Timestamp Anomaly</div>
               <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
@@ -1890,7 +1956,7 @@ function SettingsView({
         </p>
         <div className="flex flex-col gap-2.5">
           {DATA_SOURCES.map((src) => (
-            <div key={src} className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+            <div key={src} className="flex items-center justify-between gap-4 p-3 rounded-md flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
               <div className="flex-1 min-w-[220px]">
                 <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>{src}</div>
                 <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
@@ -1989,7 +2055,7 @@ function IntegrationsView({ skus }) {
         </div>
         <div className="flex flex-col gap-2">
           {pings.map((p, i) => (
-            <div key={i} className="flex items-center justify-between p-2.5 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.borderSoft}` }}>
+            <div key={i} className="flex items-center justify-between p-2.5 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.borderSoft}` }}>
               <div className="flex items-center gap-2">
                 <Ship size={14} color={C.teal} />
                 <span style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13 }}>{p.vessel}</span>
@@ -2072,7 +2138,7 @@ function AlertsBell({ skus, onSelectSku }) {
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative flex items-center justify-center rounded-lg p-2"
+        className="relative flex items-center justify-center rounded-md p-2"
         style={{ border: `1px solid ${C.border}`, background: open ? C.panelAlt : "transparent" }}
       >
         <Bell size={16} color={alertSkus.length ? C.coral : C.textMuted} />
@@ -2087,7 +2153,7 @@ function AlertsBell({ skus, onSelectSku }) {
       </button>
       {open && (
         <div
-          className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl p-2 z-20"
+          className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-md p-2 z-20"
           style={{ background: C.panel, border: `1px solid ${C.border}`, boxShadow: "0 10px 30px rgba(0,0,0,0.4)" }}
         >
           <div className="flex items-center justify-between px-2 py-1.5">
@@ -2102,7 +2168,7 @@ function AlertsBell({ skus, onSelectSku }) {
           {alertSkus.slice(0, 12).map((s) => (
             <div
               key={s.id}
-              className="flex items-center justify-between gap-2 p-2 rounded-lg"
+              className="flex items-center justify-between gap-2 p-2 rounded-md"
               style={{ borderTop: `1px solid ${C.borderSoft}` }}
             >
               <button
@@ -2161,7 +2227,7 @@ function LogicView({ weights, thresholds }) {
           />
         </div>
         <div
-          className="mt-5 p-4 rounded-lg text-sm"
+          className="mt-5 p-4 rounded-md text-sm"
           style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_BODY, color: C.textMuted, lineHeight: 1.6 }}
         >
           The result: planners ask <em style={{ color: C.text }}>"Where is SKU X?"</em> and{" "}
@@ -2222,7 +2288,7 @@ function LogicView({ weights, thresholds }) {
             { label: "Warehouse Received", side: "Destination", body: "The consignee (or their 3PL) confirms receipt at a warehouse or distribution center." },
             { label: "Delivered / Empty Returned", side: "Destination", body: "Final delivery to the consignee, and the empty container is returned to the carrier's depot." },
           ].map((row) => (
-            <div key={row.label} className="flex items-start gap-3 p-2.5 rounded-lg flex-wrap" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
+            <div key={row.label} className="flex items-start gap-3 p-2.5 rounded-md flex-wrap" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
               <span
                 className="shrink-0 px-2 py-0.5 rounded-full text-xs"
                 style={{ fontFamily: FONT_MONO, color: C.textFaint, border: `1px solid ${C.border}`, minWidth: 74, textAlign: "center" }}
@@ -2237,7 +2303,7 @@ function LogicView({ weights, thresholds }) {
           ))}
         </div>
         <div
-          className="mt-4 p-3 rounded-lg text-xs"
+          className="mt-4 p-3 rounded-md text-xs"
           style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_BODY, color: C.textMuted, lineHeight: 1.6 }}
         >
           Two more real details worth knowing: at Rhine-connected ports (Rotterdam, Antwerp, Hamburg), containers
@@ -2300,7 +2366,7 @@ function LogicView({ weights, thresholds }) {
           </table>
         </div>
         <div
-          className="mt-4 p-3 rounded-lg text-xs"
+          className="mt-4 p-3 rounded-md text-xs"
           style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_BODY, color: C.textMuted, lineHeight: 1.6 }}
         >
           Being direct about it: the calibration multipliers above are illustrative, not derived from real
@@ -2336,7 +2402,7 @@ function LogicView({ weights, thresholds }) {
           never a confusing negative one) has simply moved out to account for it.
         </p>
         <div
-          className="mt-4 p-3 rounded-lg text-xs"
+          className="mt-4 p-3 rounded-md text-xs"
           style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_BODY, color: C.textMuted, lineHeight: 1.6 }}
         >
           <strong style={{ color: C.text }}>Priority Score</strong> = (100 − confidence) + urgency points
@@ -2363,7 +2429,7 @@ function LogicView({ weights, thresholds }) {
           safeguards, all tunable in Settings:
         </p>
         <div className="flex flex-col gap-3">
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1">Grace window + self-healing</div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               A missing scan under the grace window (default 24h) doesn't cost confidence yet — it's marked{" "}
@@ -2374,7 +2440,7 @@ function LogicView({ weights, thresholds }) {
               these tags directly in a SKU's custody ladder.
             </p>
           </div>
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1">Conflict detection</div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               A small share of containers get a synthetic "two systems disagree" event (e.g. Carrier EDI vs
@@ -2382,7 +2448,7 @@ function LogicView({ weights, thresholds }) {
               genuinely independent live feeds, which a real product would need.
             </p>
           </div>
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1">Timestamp anomaly detection</div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               This one isn't seeded — it's real logic that checks whether a disruption was logged before a
@@ -2391,7 +2457,7 @@ function LogicView({ weights, thresholds }) {
               inconsistency, this catches it.
             </p>
           </div>
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1">Source reliability weighting</div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               Every disruption is tagged with the system that reported it (Carrier EDI, GPS Telemetry, Manual
@@ -2415,7 +2481,7 @@ function LogicView({ weights, thresholds }) {
         </p>
 
         <div className="flex flex-col gap-4">
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex items-center gap-2 mb-2">
               <Database size={14} color={C.amber} />
               <span style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }}>ERP reconciliation</span>
@@ -2436,7 +2502,7 @@ function LogicView({ weights, thresholds }) {
             </ul>
           </div>
 
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex items-center gap-2 mb-2">
               <CloudRain size={14} color={C.amber} />
               <span style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }}>Weather disruptions</span>
@@ -2456,7 +2522,7 @@ function LogicView({ weights, thresholds }) {
             </ul>
           </div>
 
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex items-center gap-2 mb-2">
               <Satellite size={14} color={C.amber} />
               <span style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }}>Live AIS vessel feed</span>
@@ -2468,7 +2534,7 @@ function LogicView({ weights, thresholds }) {
             </p>
           </div>
 
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex items-center gap-2 mb-2">
               <MapPinned size={14} color={C.amber} />
               <span style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }}>Route & compliance risk</span>
@@ -2513,7 +2579,7 @@ function LogicView({ weights, thresholds }) {
 
 function ProblemCard({ icon: Icon, title, body }) {
   return (
-    <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+    <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
       <Icon size={16} color={C.coral} className="mb-2" />
       <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1.5">{title}</div>
       <div style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>{body}</div>
@@ -2523,7 +2589,7 @@ function ProblemCard({ icon: Icon, title, body }) {
 
 function HelpLink({ icon: Icon, title, body }) {
   return (
-    <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+    <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
       <Icon size={16} color={C.teal} className="mb-2" />
       <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1.5">{title}</div>
       <div style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>{body}</div>
@@ -2632,19 +2698,19 @@ export default function App() {
   };
 
   const TABS = [
-    { key: "dashboard", label: "Dashboard", icon: Gauge },
-    { key: "search", label: "SKU Search", icon: Search },
+    { key: "dashboard", label: "Control Tower", icon: Gauge },
+    { key: "search", label: "SKU", icon: Search },
     { key: "exceptions", label: "Exceptions", icon: AlertTriangle },
     { key: "simulator", label: "Simulator", icon: PlayCircle },
-    { key: "settings", label: "Settings", icon: Settings },
-    { key: "integrations", label: "Integrations", icon: Satellite },
+    { key: "settings", label: "Model", icon: Settings },
+    { key: "integrations", label: "Feeds", icon: Satellite },
     { key: "logic", label: "Logic", icon: HelpCircle },
   ];
 
   return (
     <div style={{ background: C.bg, minHeight: "100vh", color: C.text }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 4px; }
@@ -2659,92 +2725,101 @@ export default function App() {
       `}</style>
 
       <header
-        className="sticky top-0 z-10 px-4 sm:px-6 py-3 flex flex-col gap-3"
-        style={{ background: "rgba(10,20,24,0.9)", backdropFilter: "blur(6px)", borderBottom: `1px solid ${C.border}` }}
+        className="sticky top-0 z-10 px-3 sm:px-5 pt-2 pb-0 flex flex-col gap-2"
+        style={{ background: "rgba(11,15,20,0.94)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${C.border}` }}
       >
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="relative flex items-center justify-center shrink-0" style={{ width: 30, height: 30 }}>
-              <span
-                className="sonar-ping absolute w-2.5 h-2.5 rounded-full"
-                style={{ background: C.teal, animation: "ping-slow 2.6s cubic-bezier(0,0,0.2,1) infinite" }}
-              />
-              <Anchor size={18} color={C.teal} />
-            </div>
-            <div className="min-w-0">
-              <div style={{ fontFamily: FONT_DISPLAY, fontSize: 16, letterSpacing: 0.2 }} className="truncate">
-                Where is My Shipment
-              </div>
-              <div style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted }} className="truncate">
-                A probabilistic SKU location framework
-              </div>
-            </div>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span
+              className="grid place-items-center shrink-0"
+              style={{ width: 22, height: 22, borderRadius: 4, background: C.tealDim, border: `1px solid ${C.teal}55` }}
+            >
+              <Anchor size={12} color={C.teal} />
+            </span>
+            <span
+              style={{ fontFamily: FONT_DISPLAY, fontSize: 13.5, fontWeight: 600, letterSpacing: -0.1 }}
+              className="truncate"
+            >
+              Where Is My Shipment
+            </span>
+            <span className="hidden sm:inline" style={{ width: 1, height: 14, background: C.border }} />
+            <span
+              className="hidden sm:inline truncate"
+              style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: 0.3 }}
+            >
+              SKU location confidence · {data.shipments.length} shipments · {data.skus.length} SKUs · synthetic
+            </span>
           </div>
-          <div className="shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
+            <a
+              href="https://github.com/shubhamgambhire"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden sm:inline"
+              style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textMuted, textDecoration: "none" }}
+            >
+              GITHUB ↗
+            </a>
             <AlertsBell skus={viewData.skus} onSelectSku={goToSku} />
           </div>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin" }}>
-          <div className="flex rounded-lg overflow-hidden shrink-0" style={{ border: `1px solid ${C.border}` }}>
-            <button
-              onClick={() => setMode("rule")}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs whitespace-nowrap"
-              style={{
-                fontFamily: FONT_MONO,
-                background: mode === "rule" ? C.panelAlt : "transparent",
-                color: mode === "rule" ? C.teal : C.textMuted,
-              }}
-              title="Fixed weights from the Settings tab — see the Logic tab for exactly how these are set"
-            >
-              <Sliders size={12} /> RULE-BASED
-            </button>
-            <button
-              onClick={() => setMode("calibrated")}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs whitespace-nowrap"
-              style={{
-                fontFamily: FONT_MONO,
-                background: mode === "calibrated" ? C.panelAlt : "transparent",
-                color: mode === "calibrated" ? C.amber : C.textMuted,
-              }}
-              title="Same Settings-tab weights, multiplied by a hypothetical calibration factor — see the Logic tab"
-            >
-              CALIBRATED
-            </button>
-          </div>
 
-          <span className="shrink-0 w-px self-stretch" style={{ background: C.border }} />
-
-          <nav className="flex gap-1.5 shrink-0">
+        <div className="flex items-end justify-between gap-3 overflow-x-auto" style={{ scrollbarWidth: "thin" }}>
+          <nav className="flex gap-4 shrink-0">
             {TABS.map((t) => {
-              const Icon = t.icon;
               const active = tab === t.key;
               return (
                 <button
                   key={t.key}
                   onClick={() => setTab(t.key)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap shrink-0"
+                  className="whitespace-nowrap shrink-0 pb-2 pt-1"
                   style={{
                     fontFamily: FONT_BODY,
-                    background: active ? C.panelAlt : "transparent",
-                    border: `1px solid ${active ? C.teal : "transparent"}`,
-                    color: active ? C.teal : C.textMuted,
+                    fontSize: 12.5,
+                    fontWeight: active ? 600 : 400,
+                    background: "transparent",
+                    border: "none",
+                    borderBottom: `2px solid ${active ? C.teal : "transparent"}`,
+                    color: active ? C.text : C.textMuted,
+                    transition: "color 150ms ease",
                   }}
                 >
-                  <Icon size={14} /> {t.label}
+                  {t.label}
                 </button>
               );
             })}
           </nav>
-        </div>
 
-        <div style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint }}>
-          synthetic demo dataset · {data.shipments.length} shipments · {data.skus.length} SKUs
+          <div className="flex shrink-0 mb-1.5 overflow-hidden" style={{ border: `1px solid ${C.border}`, borderRadius: 5 }}>
+            {[
+              ["rule", "RULE", "Fixed weights from Settings — see Logic for how they are set"],
+              ["calibrated", "CALIBRATED", "Settings weights × a hypothetical calibration factor — see Logic"],
+            ].map(([key, label, tip]) => (
+              <button
+                key={key}
+                onClick={() => setMode(key)}
+                className="px-2.5 py-1 text-xs whitespace-nowrap"
+                style={{
+                  fontFamily: FONT_MONO,
+                  fontSize: 10,
+                  letterSpacing: 0.5,
+                  background: mode === key ? C.panelAlt : "transparent",
+                  border: "none",
+                  color: mode === key ? C.text : C.textFaint,
+                }}
+                title={tip}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
 
-      <main className="p-4 sm:p-6 max-w-6xl mx-auto">
+
+      <main className="px-3 sm:px-5 py-4 max-w-[1440px] mx-auto">
         <TabIntro tab={tab} />
         {tab === "dashboard" && (
           <DashboardView shipments={viewData.shipments} containers={viewData.containers} skus={viewData.skus} onSelectSku={goToSku} onDrill={drillToExceptions} />
@@ -2774,9 +2849,19 @@ export default function App() {
         {tab === "logic" && <LogicView weights={weights} thresholds={thresholds} />}
       </main>
 
-      <footer className="px-6 py-6 text-center" style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }}>
-        MVP prototype — rule-based confidence engine with adjustable weights, a simulated calibration mode, what-if simulator, and illustrative AIS/ERP integrations. Synthetic data only.
+      <footer
+        className="max-w-[1440px] mx-auto px-3 sm:px-5 py-5 flex flex-wrap items-center justify-between gap-2"
+        style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, borderTop: `1px solid ${C.borderSoft}` }}
+      >
+        <span>Rule-based confidence engine · what-if simulator · illustrative AIS/EDI feeds · synthetic data only</span>
+        <span className="flex items-center gap-3">
+          <span>Built by Shubham Gambhire</span>
+          <a href="https://github.com/shubhamgambhire" target="_blank" rel="noreferrer" style={{ color: C.textMuted, textDecoration: "none" }}>
+            GitHub ↗
+          </a>
+        </span>
       </footer>
+
     </div>
   );
 }
@@ -2802,66 +2887,69 @@ function SearchView({ data, selectedId, onSelectId }) {
   const shipment = selected ? shipments.find((s) => s.id === selected.shipmentId) : null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-5 min-w-0">
-      <div className="md:col-span-2 flex flex-col gap-3 min-w-0 w-full overflow-hidden">
+    <div className="grid grid-cols-1 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] gap-4 min-w-0">
+      <div className="flex flex-col gap-2 min-w-0 w-full overflow-hidden">
         <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" color={C.textMuted} />
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" color={C.textFaint} />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search SKU, customer, or category…"
+            placeholder="Search SKU, customer, category…"
             aria-label="Search SKU, customer, or category"
-            className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-lg outline-none text-sm"
-            style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
+            className="w-full min-w-0 pl-8 pr-3 py-1.5 outline-none"
+            style={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontFamily: FONT_MONO, fontSize: 12 }}
           />
         </div>
-        <div className="flex flex-col gap-2 max-h-[520px] overflow-y-auto pr-1">
-          {results.map((s) => {
+        <div
+          className="overflow-y-auto overflow-hidden"
+          style={{ maxHeight: 620, border: `1px solid ${C.border}`, borderRadius: 6, background: C.panel }}
+        >
+          {results.map((s, i) => {
             const active = selected && s.id === selected.id;
             const m = RISK_META[s.risk];
             return (
               <button
                 key={s.id}
                 onClick={() => onSelectId(s.id)}
-                className="text-left p-3 rounded-lg flex items-center justify-between gap-2"
+                className="text-left w-full px-3 py-2 flex items-center justify-between gap-2"
                 style={{
-                  background: active ? C.panelAlt : C.panel,
-                  border: `1px solid ${active ? m.color : C.border}`,
+                  background: active ? C.panelAlt : "transparent",
+                  border: "none",
+                  borderTop: i ? `1px solid ${C.borderSoft}` : "none",
+                  borderLeft: `2px solid ${active ? m.color : "transparent"}`,
+                  transition: "background 150ms ease",
                 }}
               >
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="truncate" style={{ fontFamily: FONT_MONO, color: C.text, fontSize: 13 }}>{s.id}</span>
-                  <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.customer}</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="truncate" style={{ fontFamily: FONT_MONO, color: C.text, fontSize: 11.5 }}>{s.id}</span>
+                  <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11 }}>{s.customer}</span>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <span style={{ fontFamily: FONT_MONO, color: m.color, fontSize: 13 }}>{s.confidence.toFixed(0)}%</span>
-                  <ChevronRight size={14} color={C.textFaint} />
-                </div>
+                <span style={{ fontFamily: FONT_MONO, color: m.color, fontSize: 11.5 }}>{s.confidence.toFixed(0)}%</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="md:col-span-3">
+      <div className="min-w-0">
         {selected ? (
-          <Panel className="p-6 flex flex-col gap-6">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Package size={16} color={C.teal} />
-                  <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, color: C.text }}>{selected.id}</span>
-                  <RiskBadge risk={selected.risk} />
+          <Panel className="p-4 flex flex-col gap-4">
+            <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,280px)] gap-4 items-start">
+              <div className="min-w-0 flex flex-col gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontFamily: FONT_MONO, fontSize: 16, color: C.text }}>{selected.id}</span>
+                    <RiskBadge risk={selected.risk} />
+                  </div>
+                  <span style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>
+                    {selected.description} · {selected.customer} · qty {selected.quantity} · ${selected.value.toLocaleString()}
+                  </span>
                 </div>
-                <span style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 13 }}>
-                  {selected.description} · {selected.customer} · qty {selected.quantity} · ${selected.value.toLocaleString()}
-                </span>
-              </div>
-              <ConfidenceGauge value={selected.confidence} thresholds={thresholds} />
-            </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div
+                  className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 py-1"
+                  style={{ borderTop: `1px solid ${C.borderSoft}`, borderBottom: `1px solid ${C.borderSoft}` }}
+                >
               <InfoCell label="Container" value={selected.containerId} />
               <InfoCell label="Pallet" value={selected.palletId} />
               <InfoCell label="Shipment" value={selected.shipmentId} />
@@ -2870,6 +2958,7 @@ function SearchView({ data, selectedId, onSelectId }) {
                 value={shipment ? `${shipment.eta.toISOString().slice(0, 10)}${shipment.isLate ? " (LATE)" : ""}` : "—"}
                 highlight={shipment?.isLate}
               />
+
               {shipment && shipment.eta.getTime() !== shipment.plannedEta.getTime() && (
                 <InfoCell label="Originally Due" value={shipment.plannedEta.toISOString().slice(0, 10)} />
               )}
@@ -2887,14 +2976,42 @@ function SearchView({ data, selectedId, onSelectId }) {
               {selected.perishable && (
                 <InfoCell label="Shelf Life" value={`${selected.shelfLifeDays} days`} highlight={selected.shelfLifeDays <= 14} />
               )}
+                </div>
+              </div>
+              <ConfidenceGauge value={selected.confidence} thresholds={thresholds} timeline={selected.timeline} />
             </div>
 
             <div>
-              <h4 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 14 }} className="mb-4 flex items-center gap-2">
-                <Radio size={14} color={C.teal} /> Chain of custody
-              </h4>
+              <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+                <h4 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13, fontWeight: 600, letterSpacing: 0.2 }}>
+                  Chain of custody
+                </h4>
+                <div className="flex flex-wrap gap-3" style={{ fontFamily: FONT_MONO, fontSize: 9.5, color: C.textFaint }}>
+                  {[
+                    ["VERIFIED", C.teal],
+                    ["EXCEPTION", C.coral],
+                    ["DELAYED", C.amber],
+                    ["PREDICTED", C.textMuted],
+                  ].map(([l, col]) => (
+                    <span key={l} className="flex items-center gap-1">
+                      <span style={{ width: 6, height: 6, borderRadius: 3, background: col, display: "inline-block" }} />
+                      {l}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div
+                className="hidden md:grid gap-x-3 pl-5 pr-1 pb-1 md:grid-cols-[1fr_120px_86px_54px]"
+                style={{ fontFamily: FONT_MONO, fontSize: 9.5, letterSpacing: 0.7, color: C.textFaint }}
+              >
+                <span>EVENT · LOCATION · EVIDENCE</span>
+                <span>TIMESTAMP (UTC)</span>
+                <span>STATE</span>
+                <span className="text-right">CONF.</span>
+              </div>
               <CustodyLadder timeline={selected.timeline} thresholds={thresholds} />
             </div>
+
           </Panel>
         ) : (
           <Panel className="p-8 flex items-center justify-center text-sm" style={{ color: C.textMuted }}>
