@@ -2898,6 +2898,16 @@ export default function App() {
     setTab("search");
   };
 
+  const goToWeightsLogic = () => {
+    setTab("logic");
+    // wait for the Logic tab to mount before scrolling to the weights section
+    setTimeout(() => {
+      document
+        .getElementById("logic-event-weights")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  };
+
   const TABS = [
     { key: "dashboard", label: "Overview", icon: Gauge },
     { key: "search", label: "SKU", icon: Search },
