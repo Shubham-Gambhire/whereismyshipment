@@ -692,7 +692,7 @@ function CustodyLadder({ timeline, thresholds }) {
 function Panel({ children, style, className = "" }) {
   return (
     <div
-      className={`rounded-xl ${className}`}
+      className={`rounded-md ${className}`}
       style={{ background: C.panel, border: `1px solid ${C.border}`, ...style }}
     >
       {children}
@@ -808,7 +808,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
 
       {staleFeed && (
         <div
-          className="flex items-start gap-2 rounded-lg px-3 py-2"
+          className="flex items-start gap-2 rounded-md px-3 py-2"
           style={{ background: C.panelAlt, border: `1px solid ${C.amberDim}` }}
         >
           <Radio size={13} color={C.amber} className="mt-0.5 shrink-0" />
@@ -920,7 +920,7 @@ function StatusTile({ count, unit, label, sub, color, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="text-left rounded-xl p-4 flex flex-col gap-1 h-full"
+      className="text-left rounded-md p-4 flex flex-col gap-1 h-full"
       style={{ background: C.panel, border: `1px solid ${C.border}`, borderLeft: `3px solid ${color}` }}
     >
       <div className="flex items-baseline gap-1.5">
@@ -1037,7 +1037,7 @@ function Sparkline({ data }) {
 
 function InfoCell({ label, value, highlight }) {
   return (
-    <div className="p-3 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+    <div className="p-3 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
       <div style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 11 }}>{label}</div>
       <div style={{ fontFamily: FONT_MONO, color: highlight ? C.coral : C.text, fontSize: 13, marginTop: 2 }}>{value}</div>
     </div>
@@ -1136,7 +1136,7 @@ function ExceptionsView({ skus, onSelectSku, preset }) {
             </button>
           ))}
         </div>
-        <div className="flex rounded-lg overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
+        <div className="flex rounded-md overflow-hidden" style={{ border: `1px solid ${C.border}` }}>
           <button
             onClick={() => setSortMode("confidence")}
             className="px-3 py-1.5 text-xs"
@@ -1386,7 +1386,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search SKU or customer…"
-              className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-lg outline-none text-sm"
+              className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-md outline-none text-sm"
               style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
             />
           </div>
@@ -1398,7 +1398,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                 <button
                   key={s.id}
                   onClick={() => selectSku(s.id)}
-                  className="text-left p-3 rounded-lg flex items-center justify-between gap-2"
+                  className="text-left p-3 rounded-md flex items-center justify-between gap-2"
                   style={{ background: active ? C.panelAlt : C.panel, border: `1px solid ${active ? m.color : C.border}` }}
                 >
                   <div className="flex flex-col gap-0.5 min-w-0">
@@ -1466,7 +1466,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                   layer on more.
                 </div>
 
-                <div className="flex rounded-lg overflow-hidden mb-3" style={{ border: `1px solid ${C.border}`, width: "fit-content" }}>
+                <div className="flex rounded-md overflow-hidden mb-3" style={{ border: `1px solid ${C.border}`, width: "fit-content" }}>
                   <button
                     onClick={() => setEventCategory("disruption")}
                     className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs"
@@ -1492,7 +1492,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                         key={o.key}
                         onClick={() => toggleQueued(o.key)}
                         title={EVENT_REASONS[o.key] || ""}
-                        className="text-left p-3 rounded-lg flex items-center gap-2.5"
+                        className="text-left p-3 rounded-md flex items-center gap-2.5"
                         style={{ background: checked ? C.panelAlt : "transparent", border: `1px solid ${checked ? color : C.border}` }}
                       >
                         <span
@@ -1511,7 +1511,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                 </div>
 
                 {queuedOptions.length > 0 && (
-                  <div className="mt-4 p-3 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+                  <div className="mt-4 p-3 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
                     <div style={{ fontFamily: FONT_MONO, fontSize: 11, color: C.textFaint }} className="mb-2">
                       QUEUED — {queuedOptions.length} EVENT{queuedOptions.length > 1 ? "S" : ""}
                     </div>
@@ -1542,7 +1542,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                 <button
                   onClick={runSimulation}
                   disabled={queuedOptions.length === 0}
-                  className="flex items-center justify-center gap-2 w-full mt-4 py-2.5 rounded-lg text-sm"
+                  className="flex items-center justify-center gap-2 w-full mt-4 py-2.5 rounded-md text-sm"
                   style={{
                     fontFamily: FONT_DISPLAY,
                     background: queuedOptions.length > 0 ? C.teal : C.panelAlt,
@@ -1692,14 +1692,14 @@ function SettingsView({
           Where the line falls between Clear, Monitor, and Alert. Default is 95% / 80%.
         </p>
         <div className="grid sm:grid-cols-2 gap-4 max-w-xl">
-          <label className="flex items-center justify-between gap-3 p-3 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <label className="flex items-center justify-between gap-3 p-3 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <span style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13 }}>Clear at or above</span>
             <div className="flex items-center gap-1">
               <input type="number" value={thresholds.clear} onChange={(e) => setClear(e.target.value)} style={inputStyle} />
               <span style={{ fontFamily: FONT_MONO, color: C.textMuted, fontSize: 13 }}>%</span>
             </div>
           </label>
-          <label className="flex items-center justify-between gap-3 p-3 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <label className="flex items-center justify-between gap-3 p-3 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <span style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13 }}>Monitor at or above</span>
             <div className="flex items-center gap-1">
               <input type="number" value={thresholds.monitor} onChange={(e) => setMonitor(e.target.value)} style={inputStyle} />
@@ -1707,7 +1707,7 @@ function SettingsView({
             </div>
           </label>
         </div>
-        <div className="mt-4 p-3 rounded-lg text-sm" style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_MONO, fontSize: 12.5 }}>
+        <div className="mt-4 p-3 rounded-md text-sm" style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_MONO, fontSize: 12.5 }}>
           <span style={{ color: C.coral }}>Alert: below {thresholds.monitor}%</span>
           <span style={{ color: C.textFaint }}> · </span>
           <span style={{ color: C.amber }}>Monitor: {thresholds.monitor}–{thresholds.clear - 1}%</span>
@@ -1726,7 +1726,7 @@ function SettingsView({
         </p>
         <div className="flex flex-col gap-2.5">
           {DISRUPTIONS.map((d) => (
-            <div key={d.key} className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+            <div key={d.key} className="flex items-center justify-between gap-4 p-3 rounded-md flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
               <div className="flex-1 min-w-[220px]">
                 <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}><Glossed text={d.label} /></div>
                 <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
@@ -1755,7 +1755,7 @@ function SettingsView({
         </p>
         <div className="flex flex-col gap-2.5">
           {ROUTE_ZONES.map((z) => (
-            <div key={z.key} className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+            <div key={z.key} className="flex items-center justify-between gap-4 p-3 rounded-md flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
               <div className="flex-1 min-w-[220px]">
                 <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>
                   {z.label} <span style={{ color: C.textFaint, fontSize: 11 }}>· {z.category}</span>
@@ -1772,7 +1772,7 @@ function SettingsView({
               />
             </div>
           ))}
-          <div className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="flex items-center justify-between gap-4 p-3 rounded-md flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex-1 min-w-[220px]">
               <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>Watchlist touch</div>
               <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
@@ -1805,12 +1805,12 @@ function SettingsView({
               onKeyDown={(e) => e.key === "Enter" && addWatchlistEntry()}
               placeholder="e.g. a port or country name"
               aria-label="Add a location to the compliance watchlist"
-              className="flex-1 px-3 py-2 rounded-lg outline-none text-sm"
+              className="flex-1 px-3 py-2 rounded-md outline-none text-sm"
               style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
             />
             <button
               onClick={addWatchlistEntry}
-              className="px-4 py-2 rounded-lg text-sm shrink-0"
+              className="px-4 py-2 rounded-md text-sm shrink-0"
               style={{ fontFamily: FONT_BODY, color: C.teal, border: `1px solid ${C.tealDim}`, background: C.panelAlt }}
             >
               Add
@@ -1847,7 +1847,7 @@ function SettingsView({
           disruption actually happened. See the Logic tab for how each of these works.
         </p>
 
-        <div className="flex items-center justify-between gap-3 p-3 rounded-lg flex-wrap mb-4" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+        <div className="flex items-center justify-between gap-3 p-3 rounded-md flex-wrap mb-4" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
           <div className="flex-1 min-w-[220px]">
             <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>Missing-scan grace window</div>
             <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
@@ -1861,7 +1861,7 @@ function SettingsView({
         </div>
 
         <div className="flex flex-col gap-2.5 mb-5">
-          <div className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="flex items-center justify-between gap-4 p-3 rounded-md flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex-1 min-w-[220px]">
               <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>Data Conflict</div>
               <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
@@ -1870,7 +1870,7 @@ function SettingsView({
             </div>
             <input type="number" value={weights.dataConflict} onChange={(e) => setWeight("dataConflict", e.target.value)} style={inputStyle} />
           </div>
-          <div className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="flex items-center justify-between gap-4 p-3 rounded-md flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex-1 min-w-[220px]">
               <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>Timestamp Anomaly</div>
               <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
@@ -1890,7 +1890,7 @@ function SettingsView({
         </p>
         <div className="flex flex-col gap-2.5">
           {DATA_SOURCES.map((src) => (
-            <div key={src} className="flex items-center justify-between gap-4 p-3 rounded-lg flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+            <div key={src} className="flex items-center justify-between gap-4 p-3 rounded-md flex-wrap" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
               <div className="flex-1 min-w-[220px]">
                 <div style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13.5 }}>{src}</div>
                 <div style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11.5, lineHeight: 1.4, marginTop: 2 }}>
@@ -1989,7 +1989,7 @@ function IntegrationsView({ skus }) {
         </div>
         <div className="flex flex-col gap-2">
           {pings.map((p, i) => (
-            <div key={i} className="flex items-center justify-between p-2.5 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.borderSoft}` }}>
+            <div key={i} className="flex items-center justify-between p-2.5 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.borderSoft}` }}>
               <div className="flex items-center gap-2">
                 <Ship size={14} color={C.teal} />
                 <span style={{ fontFamily: FONT_BODY, color: C.text, fontSize: 13 }}>{p.vessel}</span>
@@ -2072,7 +2072,7 @@ function AlertsBell({ skus, onSelectSku }) {
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative flex items-center justify-center rounded-lg p-2"
+        className="relative flex items-center justify-center rounded-md p-2"
         style={{ border: `1px solid ${C.border}`, background: open ? C.panelAlt : "transparent" }}
       >
         <Bell size={16} color={alertSkus.length ? C.coral : C.textMuted} />
@@ -2087,7 +2087,7 @@ function AlertsBell({ skus, onSelectSku }) {
       </button>
       {open && (
         <div
-          className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl p-2 z-20"
+          className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-md p-2 z-20"
           style={{ background: C.panel, border: `1px solid ${C.border}`, boxShadow: "0 10px 30px rgba(0,0,0,0.4)" }}
         >
           <div className="flex items-center justify-between px-2 py-1.5">
@@ -2102,7 +2102,7 @@ function AlertsBell({ skus, onSelectSku }) {
           {alertSkus.slice(0, 12).map((s) => (
             <div
               key={s.id}
-              className="flex items-center justify-between gap-2 p-2 rounded-lg"
+              className="flex items-center justify-between gap-2 p-2 rounded-md"
               style={{ borderTop: `1px solid ${C.borderSoft}` }}
             >
               <button
@@ -2161,7 +2161,7 @@ function LogicView({ weights, thresholds }) {
           />
         </div>
         <div
-          className="mt-5 p-4 rounded-lg text-sm"
+          className="mt-5 p-4 rounded-md text-sm"
           style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_BODY, color: C.textMuted, lineHeight: 1.6 }}
         >
           The result: planners ask <em style={{ color: C.text }}>"Where is SKU X?"</em> and{" "}
@@ -2222,7 +2222,7 @@ function LogicView({ weights, thresholds }) {
             { label: "Warehouse Received", side: "Destination", body: "The consignee (or their 3PL) confirms receipt at a warehouse or distribution center." },
             { label: "Delivered / Empty Returned", side: "Destination", body: "Final delivery to the consignee, and the empty container is returned to the carrier's depot." },
           ].map((row) => (
-            <div key={row.label} className="flex items-start gap-3 p-2.5 rounded-lg flex-wrap" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
+            <div key={row.label} className="flex items-start gap-3 p-2.5 rounded-md flex-wrap" style={{ borderTop: `1px solid ${C.borderSoft}` }}>
               <span
                 className="shrink-0 px-2 py-0.5 rounded-full text-xs"
                 style={{ fontFamily: FONT_MONO, color: C.textFaint, border: `1px solid ${C.border}`, minWidth: 74, textAlign: "center" }}
@@ -2237,7 +2237,7 @@ function LogicView({ weights, thresholds }) {
           ))}
         </div>
         <div
-          className="mt-4 p-3 rounded-lg text-xs"
+          className="mt-4 p-3 rounded-md text-xs"
           style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_BODY, color: C.textMuted, lineHeight: 1.6 }}
         >
           Two more real details worth knowing: at Rhine-connected ports (Rotterdam, Antwerp, Hamburg), containers
@@ -2300,7 +2300,7 @@ function LogicView({ weights, thresholds }) {
           </table>
         </div>
         <div
-          className="mt-4 p-3 rounded-lg text-xs"
+          className="mt-4 p-3 rounded-md text-xs"
           style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_BODY, color: C.textMuted, lineHeight: 1.6 }}
         >
           Being direct about it: the calibration multipliers above are illustrative, not derived from real
@@ -2336,7 +2336,7 @@ function LogicView({ weights, thresholds }) {
           never a confusing negative one) has simply moved out to account for it.
         </p>
         <div
-          className="mt-4 p-3 rounded-lg text-xs"
+          className="mt-4 p-3 rounded-md text-xs"
           style={{ background: C.panelAlt, border: `1px solid ${C.border}`, fontFamily: FONT_BODY, color: C.textMuted, lineHeight: 1.6 }}
         >
           <strong style={{ color: C.text }}>Priority Score</strong> = (100 − confidence) + urgency points
@@ -2363,7 +2363,7 @@ function LogicView({ weights, thresholds }) {
           safeguards, all tunable in Settings:
         </p>
         <div className="flex flex-col gap-3">
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1">Grace window + self-healing</div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               A missing scan under the grace window (default 24h) doesn't cost confidence yet — it's marked{" "}
@@ -2374,7 +2374,7 @@ function LogicView({ weights, thresholds }) {
               these tags directly in a SKU's custody ladder.
             </p>
           </div>
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1">Conflict detection</div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               A small share of containers get a synthetic "two systems disagree" event (e.g. Carrier EDI vs
@@ -2382,7 +2382,7 @@ function LogicView({ weights, thresholds }) {
               genuinely independent live feeds, which a real product would need.
             </p>
           </div>
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1">Timestamp anomaly detection</div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               This one isn't seeded — it's real logic that checks whether a disruption was logged before a
@@ -2391,7 +2391,7 @@ function LogicView({ weights, thresholds }) {
               inconsistency, this catches it.
             </p>
           </div>
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1">Source reliability weighting</div>
             <p style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>
               Every disruption is tagged with the system that reported it (Carrier EDI, GPS Telemetry, Manual
@@ -2415,7 +2415,7 @@ function LogicView({ weights, thresholds }) {
         </p>
 
         <div className="flex flex-col gap-4">
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex items-center gap-2 mb-2">
               <Database size={14} color={C.amber} />
               <span style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }}>ERP reconciliation</span>
@@ -2436,7 +2436,7 @@ function LogicView({ weights, thresholds }) {
             </ul>
           </div>
 
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex items-center gap-2 mb-2">
               <CloudRain size={14} color={C.amber} />
               <span style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }}>Weather disruptions</span>
@@ -2456,7 +2456,7 @@ function LogicView({ weights, thresholds }) {
             </ul>
           </div>
 
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex items-center gap-2 mb-2">
               <Satellite size={14} color={C.amber} />
               <span style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }}>Live AIS vessel feed</span>
@@ -2468,7 +2468,7 @@ function LogicView({ weights, thresholds }) {
             </p>
           </div>
 
-          <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+          <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
             <div className="flex items-center gap-2 mb-2">
               <MapPinned size={14} color={C.amber} />
               <span style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }}>Route & compliance risk</span>
@@ -2513,7 +2513,7 @@ function LogicView({ weights, thresholds }) {
 
 function ProblemCard({ icon: Icon, title, body }) {
   return (
-    <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+    <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
       <Icon size={16} color={C.coral} className="mb-2" />
       <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1.5">{title}</div>
       <div style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>{body}</div>
@@ -2523,7 +2523,7 @@ function ProblemCard({ icon: Icon, title, body }) {
 
 function HelpLink({ icon: Icon, title, body }) {
   return (
-    <div className="p-4 rounded-lg" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
+    <div className="p-4 rounded-md" style={{ background: C.panelAlt, border: `1px solid ${C.border}` }}>
       <Icon size={16} color={C.teal} className="mb-2" />
       <div style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 13.5 }} className="mb-1.5">{title}</div>
       <div style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12.5, lineHeight: 1.55 }}>{body}</div>
@@ -2686,7 +2686,7 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin" }}>
-          <div className="flex rounded-lg overflow-hidden shrink-0" style={{ border: `1px solid ${C.border}` }}>
+          <div className="flex rounded-md overflow-hidden shrink-0" style={{ border: `1px solid ${C.border}` }}>
             <button
               onClick={() => setMode("rule")}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs whitespace-nowrap"
@@ -2723,7 +2723,7 @@ export default function App() {
                 <button
                   key={t.key}
                   onClick={() => setTab(t.key)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm whitespace-nowrap shrink-0"
                   style={{
                     fontFamily: FONT_BODY,
                     background: active ? C.panelAlt : "transparent",
@@ -2811,7 +2811,7 @@ function SearchView({ data, selectedId, onSelectId }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search SKU, customer, or category…"
             aria-label="Search SKU, customer, or category"
-            className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-lg outline-none text-sm"
+            className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-md outline-none text-sm"
             style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
           />
         </div>
@@ -2823,7 +2823,7 @@ function SearchView({ data, selectedId, onSelectId }) {
               <button
                 key={s.id}
                 onClick={() => onSelectId(s.id)}
-                className="text-left p-3 rounded-lg flex items-center justify-between gap-2"
+                className="text-left p-3 rounded-md flex items-center justify-between gap-2"
                 style={{
                   background: active ? C.panelAlt : C.panel,
                   border: `1px solid ${active ? m.color : C.border}`,

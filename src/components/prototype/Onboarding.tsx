@@ -217,7 +217,7 @@ export function ConfidenceAdvice({ value, thresholds }) {
   const a = confidenceAdvice(value, thresholds);
   return (
     <div
-      className="mt-3 rounded-lg px-3 py-2"
+      className="mt-3 rounded-md px-3 py-2"
       style={{ background: C.panelAlt, border: `1px solid ${C.border}`, maxWidth: 260 }}
     >
       <div style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: a.color, letterSpacing: 0.6 }}>
@@ -269,7 +269,7 @@ export function TabIntro({ tab }) {
   if (!intro) return null;
   return (
     <div
-      className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3"
+      className="mb-5 flex items-start gap-2.5 rounded-md px-4 py-3"
       style={{ background: C.panel, border: `1px solid ${C.border}` }}
     >
       <Info size={15} color={C.teal} className="mt-0.5 shrink-0" />
@@ -287,7 +287,7 @@ export function TabIntro({ tab }) {
 export function ReadThisFirst() {
   const [open, setOpen] = useState(true);
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
+    <div className="rounded-md overflow-hidden" style={{ background: C.panel, border: `1px solid ${C.border}` }}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
