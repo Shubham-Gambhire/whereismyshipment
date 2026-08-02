@@ -718,10 +718,16 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
     return { avgConfidence, needAttention, customsDelayed, highValueAtRisk };
   }, [skus]);
 
-  const priority = useMemo(
-    () => [...skus].filter((s) => s.risk !== "clear").sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 6),
-    [skus]
-  );
+  // One line per container: six rows of the same box is a queue nobody
+  // can work from.
+  const priority = useMemo(() => {
+    const seen = new Set();
+    return [...skus]
+      .filter((s) => s.risk !== "clear")
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .filter((s) => (seen.has(s.containerId) ? false : seen.add(s.containerId)))
+      .slice(0, 6);
+  }, [skus]);
 
   const recentEvents = useMemo(() => {
     const rows = [];
@@ -769,7 +775,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
       return { src, hrs };
     });
   }, [containers]);
-  const staleFeed = feeds.filter((f) => f.hrs === null || f.hrs > 6).sort((a, b) => (b.hrs ?? 999) - (a.hrs ?? 999))[0];
+  const staleFeed = [...feeds].sort((a, b) => (b.hrs ?? 9999) - (a.hrs ?? 9999))[0];
 
   return (
     <div className="flex flex-col gap-5">
@@ -806,8 +812,8 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
         >
           <Radio size={13} color={C.amber} className="mt-0.5 shrink-0" />
           <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.textMuted, lineHeight: 1.5 }}>
-            <span style={{ color: C.amber, fontFamily: FONT_MONO, fontSize: 11 }}>FEED BEHIND · </span>
-            Last <Term term={staleFeed.src}>{staleFeed.src}</Term> message was{" "}
+            <span style={{ color: C.amber, fontFamily: FONT_MONO, fontSize: 11 }}>SLOWEST FEED · </span>
+            Last <Term term={staleFeed.src}>{staleFeed.src}</Term> message came in{" "}
             {staleFeed.hrs === null ? "never received" : `${Math.floor(staleFeed.hrs)}h ${Math.round((staleFeed.hrs % 1) * 60)}m ago`}.
             Anything relying on it is older than it looks.
           </span>
@@ -961,9 +967,9 @@ function RouteMap({ shipments, skus }) {
           ))}
         </div>
       </div>
-      <svg viewBox="0 12 360 150" style={{ width: "100%", display: "block", background: "#060B0F" }}>
+      <svg viewBox="0 25 360 112" style={{ width: "100%", display: "block", background: "#060B0F" }}>
         {[-120, -60, 0, 60, 120].map((lon) => (
-          <line key={lon} x1={px(lon)} x2={px(lon)} y1={12} y2={162} stroke={C.borderSoft} strokeWidth={0.3} />
+          <line key={lon} x1={px(lon)} x2={px(lon)} y1={25} y2={137} stroke={C.borderSoft} strokeWidth={0.3} />
         ))}
         {[60, 30, 0, -30].map((lat) => (
           <line key={lat} x1={0} x2={360} y1={py(lat)} y2={py(lat)} stroke={C.borderSoft} strokeWidth={0.3} />
