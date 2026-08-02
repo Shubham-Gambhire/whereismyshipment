@@ -12,19 +12,19 @@ import { HelpCircle, Info, ChevronDown } from "lucide-react";
 --------------------------------------------------------- */
 
 const C = {
-  bg: "#0A1418",
-  panel: "#0F1F26",
-  panelAlt: "#152C35",
-  border: "#1E3841",
-  teal: "#34D8C3",
-  amber: "#EFB13C",
-  coral: "#EA5A4A",
+  bg: "#080D12",
+  panel: "#0E1821",
+  panelAlt: "#142631",
+  border: "#1E3342",
+  teal: "#2DD4BF",
+  amber: "#FBBF24",
+  coral: "#F87171",
   text: "#E8F1F2",
   textMuted: "#7F9BA3",
   textFaint: "#4E6870",
 };
-const FONT_DISPLAY = "'Space Grotesk', sans-serif";
-const FONT_BODY = "'Inter', sans-serif";
+const FONT_DISPLAY = "'Sora', sans-serif";
+const FONT_BODY = "'Manrope', sans-serif";
 const FONT_MONO = "'IBM Plex Mono', monospace";
 
 /* Jargon → plain English. Longest keys are matched first. */
