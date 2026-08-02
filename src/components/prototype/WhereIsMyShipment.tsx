@@ -756,7 +756,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku }) {
           Shipments in transit
         </h3>
         <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY }}>
+          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY, minWidth: 520 }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
                 <th className="pb-2 font-normal">Shipment</th>
@@ -959,7 +959,7 @@ function ExceptionsView({ skus, onSelectSku }) {
 
       <Panel className="p-5">
         <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY }}>
+          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY, minWidth: 520 }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
                 <th className="pb-2 font-normal">SKU</th>
@@ -1736,7 +1736,7 @@ function IntegrationsView({ skus }) {
           <h3 style={{ fontFamily: FONT_DISPLAY, color: C.text, fontSize: 15 }}>ERP reconciliation (simulated SAP/Oracle sync)</h3>
         </div>
         <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY }}>
+          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY, minWidth: 520 }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
                 <th className="pb-2 font-normal">SKU</th>
@@ -1990,7 +1990,7 @@ function LogicView({ weights, thresholds }) {
           no such analysis exists yet. The table below shows both, using your current Settings:
         </p>
         <div className="overflow-x-auto" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY }}>
+          <table className="w-full text-sm" style={{ fontFamily: FONT_BODY, minWidth: 520 }}>
             <thead>
               <tr style={{ color: C.textMuted, fontSize: 11 }} className="text-left">
                 <th className="pb-2 font-normal">Event</th>
