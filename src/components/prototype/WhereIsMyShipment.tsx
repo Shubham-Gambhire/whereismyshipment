@@ -1610,6 +1610,9 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-5 min-w-0">
         <div className="md:col-span-2 flex flex-col gap-3 min-w-0 w-full overflow-hidden">
+          <span style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.8, color: C.textFaint }}>
+            STEP 1 · PICK A SKU
+          </span>
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" color={C.textMuted} />
             <input
@@ -1620,7 +1623,8 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
               style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
             />
           </div>
-          <div className="flex flex-col gap-2 max-h-[440px] overflow-y-auto pr-1">
+          <div className="flex flex-col gap-2 max-h-[260px] md:max-h-[440px] overflow-y-auto pr-1">
+
             {results.map((s) => {
               const active = sku && s.id === sku.id;
               const m = RISK_META[s.risk];
