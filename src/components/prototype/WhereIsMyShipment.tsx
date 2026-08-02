@@ -977,25 +977,33 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
   );
 }
 
-function StatusTile({ count, unit, label, sub, color, onClick }) {
+function StatusTile({ count, unit, label, sub, color, onClick, first }) {
+  const [hover, setHover] = useState(false);
   return (
     <button
       onClick={onClick}
-      className="text-left rounded-md p-4 flex flex-col gap-1 h-full"
-      style={{ background: C.panel, border: `1px solid ${C.border}`, borderLeft: `3px solid ${color}` }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className="text-left px-3.5 py-2.5 flex flex-col gap-0.5 h-full"
+      style={{
+        background: hover ? C.panelAlt : "transparent",
+        border: "none",
+        borderLeft: first ? "none" : `1px solid ${C.borderSoft}`,
+        borderTop: `2px solid ${color}`,
+        transition: "background 150ms ease",
+      }}
     >
       <div className="flex items-baseline gap-1.5">
-        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 30, lineHeight: 1, color }}>{count}</span>
-        {unit && <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.textFaint }}>{unit}</span>}
+        <span style={{ fontFamily: FONT_DISPLAY, fontSize: 21, fontWeight: 600, lineHeight: 1.1, color }}>{count}</span>
+        <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.text, fontWeight: 500 }}>{label}</span>
       </div>
-      <span style={{ fontFamily: FONT_BODY, fontSize: 12.5, color: C.text }}>{label}</span>
-      <span style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textFaint, lineHeight: 1.45 }}>{sub}</span>
-      <span className="mt-auto pt-2 flex items-center gap-1" style={{ fontFamily: FONT_MONO, fontSize: 10, color: C.teal }}>
-        SEE THEM <ChevronRight size={10} />
+      <span style={{ fontFamily: FONT_BODY, fontSize: 11, color: C.textFaint, lineHeight: 1.4 }}>
+        {unit ? `${unit} · ` : ""}{sub}
       </span>
     </button>
   );
 }
+
 
 /* Lanes and ports on an equirectangular frame. Positions are approximate —
    this is a situational display, not a navigation chart. */
