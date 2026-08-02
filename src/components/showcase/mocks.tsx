@@ -105,8 +105,11 @@ export function DashboardMock() {
         <table className="w-full text-left">
           <thead>
             <tr className="text-[9px] text-muted-foreground md:text-[10px]">
-              {["Shipment", "Vessel", "Route", "ETA", "Current event"].map((h) => (
-                <th key={h} className="pb-2 font-normal">
+              {["Shipment", "Vessel", "Route", "ETA", "Current event"].map((h, i) => (
+                <th
+                  key={h}
+                  className={`pb-2 pr-3 font-normal ${i === 1 || i === 2 ? "hidden sm:table-cell" : ""}`}
+                >
                   {h}
                 </th>
               ))}
@@ -115,10 +118,10 @@ export function DashboardMock() {
           <tbody>
             {rows.map((r) => (
               <tr key={r[0]} className="border-t border-border-soft text-[9px] md:text-[11px]">
-                <td className="py-1.5 font-mono text-foreground">{r[0]}</td>
-                <td className="py-1.5 text-foreground">{r[1]}</td>
-                <td className="py-1.5 text-muted-foreground">{r[2]}</td>
-                <td className="py-1.5 font-mono text-muted-foreground">{r[3]}</td>
+                <td className="py-1.5 pr-3 font-mono text-foreground">{r[0]}</td>
+                <td className="hidden py-1.5 pr-3 text-foreground sm:table-cell">{r[1]}</td>
+                <td className="hidden py-1.5 pr-3 text-muted-foreground sm:table-cell">{r[2]}</td>
+                <td className="py-1.5 pr-3 font-mono text-muted-foreground whitespace-nowrap">{r[3]}</td>
                 <td className="py-1.5 text-muted-foreground">{r[4]}</td>
               </tr>
             ))}
