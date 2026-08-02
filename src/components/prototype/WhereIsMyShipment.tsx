@@ -814,8 +814,12 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
           <Radio size={13} color={C.amber} className="mt-0.5 shrink-0" />
           <span style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.textMuted, lineHeight: 1.5 }}>
             <span style={{ color: C.amber, fontFamily: FONT_MONO, fontSize: 11 }}>SLOWEST FEED · </span>
-            Last <Term term={staleFeed.src}>{staleFeed.src}</Term> message came in{" "}
-            {staleFeed.hrs === null ? "never received" : `${Math.floor(staleFeed.hrs)}h ${Math.round((staleFeed.hrs % 1) * 60)}m ago`}.
+            {staleFeed.hrs === null ? (
+              <>No <Term term={staleFeed.src}>{staleFeed.src}</Term> message has landed in this window at all.</>
+            ) : (
+              <>Last <Term term={staleFeed.src}>{staleFeed.src}</Term> message came in{" "}
+              {`${Math.floor(staleFeed.hrs)}h ${Math.round((staleFeed.hrs % 1) * 60)}m ago`}.</>
+            )}{" "}
             Anything relying on it is older than it looks.
           </span>
         </div>
