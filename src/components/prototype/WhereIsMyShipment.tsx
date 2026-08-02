@@ -762,7 +762,7 @@ function Panel({ children, style, className = "" }) {
    Status strip -> map + priority queue -> event stream + trend.
    Every number in the strip is a filter, not a decoration.
 --------------------------------------------------------- */
-function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
+function DashboardView({ shipments, containers, skus, onSelectSku, onDrill, modeBar }) {
   const kpis = useMemo(() => {
     const avgConfidence = skus.reduce((a, s) => a + s.confidence, 0) / skus.length;
     const needAttention = new Set(skus.filter((s) => s.risk === "alert").map((s) => s.containerId)).size;
