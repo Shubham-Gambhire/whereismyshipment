@@ -2950,20 +2950,19 @@ export default function App() {
           <div className="flex items-center gap-2.5 min-w-0">
             <button
               onClick={() => setTab("dashboard")}
-              className="flex items-center gap-1.5 shrink-0 px-2 py-1 rounded-md"
-              style={{
-                fontFamily: FONT_MONO,
-                fontSize: 10.5,
-                letterSpacing: 0.5,
-                color: tab === "dashboard" ? C.text : C.textMuted,
-                background: "transparent",
-                border: `1px solid ${C.border}`,
-                cursor: "pointer",
-              }}
-              aria-label="Back to Overview"
+              className="flex items-center gap-2 shrink-0"
+              style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
+              aria-label="Where Is My Shipment — back to Overview"
             >
-              <Home size={12} /> HOME
+              <Anchor size={16} color={C.teal} className="logo-bob" style={{ animation: "logo-bob 4s ease-in-out infinite" }} />
+              <span
+                className="whitespace-nowrap"
+                style={{ fontFamily: FONT_DISPLAY, fontSize: 12.5, fontWeight: 600, color: C.text, letterSpacing: 0.2 }}
+              >
+                Where Is My Shipment
+              </span>
             </button>
+            <span className="hidden sm:inline" style={{ width: 1, height: 14, background: C.border }} />
             <span
               className="hidden sm:inline truncate"
               style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: 0.3 }}
