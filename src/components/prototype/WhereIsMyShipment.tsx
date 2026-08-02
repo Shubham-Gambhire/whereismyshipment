@@ -2681,19 +2681,19 @@ export default function App() {
   };
 
   const TABS = [
-    { key: "dashboard", label: "Dashboard", icon: Gauge },
-    { key: "search", label: "SKU Search", icon: Search },
+    { key: "dashboard", label: "Control Tower", icon: Gauge },
+    { key: "search", label: "SKU", icon: Search },
     { key: "exceptions", label: "Exceptions", icon: AlertTriangle },
     { key: "simulator", label: "Simulator", icon: PlayCircle },
-    { key: "settings", label: "Settings", icon: Settings },
-    { key: "integrations", label: "Integrations", icon: Satellite },
+    { key: "settings", label: "Model", icon: Settings },
+    { key: "integrations", label: "Feeds", icon: Satellite },
     { key: "logic", label: "Logic", icon: HelpCircle },
   ];
 
   return (
     <div style={{ background: C.bg, minHeight: "100vh", color: C.text }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-thumb { background: ${C.border}; border-radius: 4px; }
