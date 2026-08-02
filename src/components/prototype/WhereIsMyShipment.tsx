@@ -190,20 +190,20 @@ const PORT_COORDS = {
 // The line an experienced control-tower operator would actually write next
 // to an exception. Deliberately opinionated, half of these say "don't act".
 const OPERATOR_NOTES = {
-  sealBroken: "Seal integrity is gone. Don't wait for the carrier's explanation \u2014 open a claim file now and inspect at gate-out.",
+  sealBroken: "Seal integrity is gone. Don't wait for the carrier's explanation, open a claim file now and inspect at gate-out.",
   customsHold: "Customs hold. Most of these clear in 48\u201372h. Only escalate if it's a contractual line or perishable.",
   missingScan: "Nine times out of ten this is terminal reporting lag, not a lost box. Chase the terminal before you chase the customer.",
   gpsAnomaly: "The tracker is drifting, not the container. Cross-check the carrier feed before you tell anyone anything.",
-  dataConflict: "Two systems disagree. That's a sync problem, not a cargo problem \u2014 reconcile it, don't escalate it.",
+  dataConflict: "Two systems disagree. That's a sync problem, not a cargo problem, reconcile it, don't escalate it.",
   timestampAnomaly: "Event logged out of sequence. Data quality issue; the physical move is probably fine.",
   customsHoldLate: "Customs hold on an already-late box. Assume the date is gone and re-plan.",
   weather: "Weather slip. Re-issue the ETA; expediting buys you nothing against a storm.",
   delay: "Routine slip. Re-issue the date rather than paying to expedite.",
-  hormuz: "Transiting Hormuz. Watch for GPS interference in the position feed \u2014 it looks like a tracking fault but isn't.",
+  hormuz: "Transiting Hormuz. Watch for GPS interference in the position feed, it looks like a tracking fault but isn't.",
   gulfOfAden: "Piracy corridor. Nothing to do operationally, but flag it to insurance if the value is high.",
   malacca: "Malacca transit. Small-scale theft risk; worth a seal check at the next port, not an escalation.",
   redSea: "Red Sea routing. If this lane matters to you, ask the carrier now whether they're going around the Cape.",
-  watchlistTouch: "Touches a watchlisted location. Compliance question before an operations one \u2014 route it to them first.",
+  watchlistTouch: "Touches a watchlisted location. Compliance question before an operations one, route it to them first.",
 };
 function operatorNote(sku) {
   const cause = [...(sku.timeline || [])].reverse().find((e) => e.delta < 0);
@@ -211,7 +211,7 @@ function operatorNote(sku) {
   if (key === "customsHold" && sku.isLate) return OPERATOR_NOTES.customsHoldLate;
   const base = OPERATOR_NOTES[key];
   if (base) return base;
-  if (sku.confidence < 60) return "No single clear cause \u2014 evidence has just thinned out across the chain. Treat the date as unsafe.";
+  if (sku.confidence < 60) return "No single clear cause, evidence has just thinned out across the chain. Treat the date as unsafe.";
   return "Nothing dramatic here. Watch it for another 24h before doing anything.";
 }
 
@@ -943,7 +943,7 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill, mode
                   </span>
                 </div>
                 <div style={{ fontFamily: FONT_BODY, fontSize: 11.5, color: C.textMuted, marginTop: 1 }} className="truncate">
-                  {s.customer || "\u2014 customer not reported"} · ${s.value.toLocaleString()} · {s.urgency} urgency
+                  {s.customer || "Customer not reported"} · ${s.value.toLocaleString()} · {s.urgency} urgency
                 </div>
                 <div
                   style={{
