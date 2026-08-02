@@ -1112,7 +1112,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search SKU or customer…"
-              className="w-full pl-9 pr-3 py-2.5 rounded-lg outline-none text-sm"
+              className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-lg outline-none text-sm"
               style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
             />
           </div>
@@ -2530,7 +2530,7 @@ function SearchView({ data, selectedId, onSelectId }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search SKU, customer, or category…"
             aria-label="Search SKU, customer, or category"
-            className="w-full pl-9 pr-3 py-2.5 rounded-lg outline-none text-sm"
+            className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-lg outline-none text-sm"
             style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
           />
         </div>
