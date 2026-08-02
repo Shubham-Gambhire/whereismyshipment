@@ -178,6 +178,44 @@ const ROUTE_ZONES = [
 ];
 const ROUTE_ZONE_LABELS = Object.fromEntries(ROUTE_ZONES.map((z) => [z.key, z.label]));
 
+// Approximate lon/lat for the synthetic port set — used only to place dots
+// and lanes on the control-tower map. Not survey-grade; good enough to make
+// the geography readable at a glance.
+const PORT_COORDS = {
+  Shanghai: [121.5, 31.2], Rotterdam: [4.4, 51.9], "Los Angeles": [-118.2, 33.7],
+  Singapore: [103.8, 1.3], Busan: [129.0, 35.1], Hamburg: [10.0, 53.5],
+  Santos: [-46.3, -23.9], "Jebel Ali": [55.0, 25.0], Ningbo: [121.6, 29.9],
+  Antwerp: [4.4, 51.2], "Long Beach": [-118.2, 33.8], Colombo: [79.8, 6.9],
+};
+
+// The line an experienced control-tower operator would actually write next
+// to an exception. Deliberately opinionated — half of these say "don't act".
+const OPERATOR_NOTES = {
+  sealBroken: "Seal integrity is gone. Don't wait for the carrier's explanation \u2014 open a claim file now and inspect at gate-out.",
+  customsHold: "Customs hold. Most of these clear in 48\u201372h. Only escalate if it's a contractual line or perishable.",
+  missingScan: "Nine times out of ten this is terminal reporting lag, not a lost box. Chase the terminal before you chase the customer.",
+  gpsAnomaly: "The tracker is drifting, not the container. Cross-check the carrier feed before you tell anyone anything.",
+  dataConflict: "Two systems disagree. That's a sync problem, not a cargo problem \u2014 reconcile it, don't escalate it.",
+  timestampAnomaly: "Event logged out of sequence. Data quality issue; the physical move is probably fine.",
+  customsHoldLate: "Customs hold on an already-late box. Assume the date is gone and re-plan.",
+  weather: "Weather slip. Re-issue the ETA; expediting buys you nothing against a storm.",
+  delay: "Routine slip. Re-issue the date rather than paying to expedite.",
+  hormuz: "Transiting Hormuz. Watch for GPS interference in the position feed \u2014 it looks like a tracking fault but isn't.",
+  gulfOfAden: "Piracy corridor. Nothing to do operationally, but flag it to insurance if the value is high.",
+  malacca: "Malacca transit. Small-scale theft risk; worth a seal check at the next port, not an escalation.",
+  redSea: "Red Sea routing. If this lane matters to you, ask the carrier now whether they're going around the Cape.",
+  watchlistTouch: "Touches a watchlisted location. Compliance question before an operations one \u2014 route it to them first.",
+};
+function operatorNote(sku) {
+  const cause = [...(sku.timeline || [])].reverse().find((e) => e.delta < 0);
+  const key = cause?.type;
+  if (key === "customsHold" && sku.isLate) return OPERATOR_NOTES.customsHoldLate;
+  const base = OPERATOR_NOTES[key];
+  if (base) return base;
+  if (sku.confidence < 60) return "No single clear cause \u2014 evidence has just thinned out across the chain. Treat the date as unsafe.";
+  return "Nothing dramatic here. Watch it for another 24h before doing anything.";
+}
+
 // Data sources feeding the confidence engine, and how much to trust each
 // one's anomaly reports by default — tunable in Settings. A known-noisy
 // source (GPS telemetry glitches, manual scan human error) has its
@@ -329,7 +367,7 @@ function generateData() {
       for (let i = 0; i < EVENT_SEQUENCE.length && reachedCount < numEventsReached; i++) {
         const ev = EVENT_SEQUENCE[i];
         if (ev.optional && rng() > ev.optional) continue;
-        t += randInt(1, 4) * 86400000 * 0.6;
+        t += randInt(1, 4) * 86400000 * 0.6 + randInt(0, 1439) * 60000;
         events.push({
           type: ev.key,
           label: ev.label,
@@ -349,7 +387,7 @@ function generateData() {
           disruptionEvents.push({
             type: d.key,
             label: d.label,
-            timestamp: new Date(baseTime + randInt(1, 6) * 3600000),
+            timestamp: new Date(baseTime + randInt(1, 6) * 3600000 + randInt(0, 59) * 60000),
             location: events[afterIdx].location,
             delta: d.delta,
             source: d.source,
@@ -368,7 +406,7 @@ function generateData() {
           disruptionEvents.push({
             type: z.key,
             label: `Transited ${z.label}`,
-            timestamp: new Date(baseTime + randInt(1, 6) * 3600000),
+            timestamp: new Date(baseTime + randInt(1, 6) * 3600000 + randInt(0, 59) * 60000),
             location: z.label,
             delta: z.delta,
             source: z.source,
@@ -386,7 +424,7 @@ function generateData() {
         disruptionEvents.push({
           type: "dataConflict",
           label: `Data Conflict: ${srcA} vs ${srcB}`,
-          timestamp: new Date(anchor.timestamp.getTime() + randInt(1, 6) * 3600000),
+          timestamp: new Date(anchor.timestamp.getTime() + randInt(1, 6) * 3600000 + randInt(0, 59) * 60000),
           location: anchor.location,
           delta: DEFAULT_WEIGHTS.dataConflict,
         });
@@ -493,11 +531,14 @@ function generateData() {
         const slaTier = weightedPick(SLA_TIERS, SLA_TIER_WEIGHTS);
         const perishable = category === "Pharmaceuticals" ? true : rng() < 0.05;
         const shelfLifeDays = perishable ? randInt(5, 90) : null;
+        // Real feeds are incomplete. A small share of records arrive with
+        // fields the source never populated — shown as "\u2014", never invented.
+        const customerMissing = rng() < 0.025;
         skus.push({
           id: skuId,
           description: `${category} item`,
           category,
-          customer,
+          customer: customerMissing ? null : customer,
           quantity,
           value,
           slaTier,
@@ -847,7 +888,7 @@ function ExceptionsView({ skus, onSelectSku }) {
     if (minValue !== "" && !Number.isNaN(minV)) list = list.filter((s) => s.value >= minV);
     const customTerms = customListInput.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
     if (customTerms.length > 0) {
-      list = list.filter((s) => customTerms.some((t) => s.id.toLowerCase().includes(t) || s.customer.toLowerCase().includes(t)));
+      list = list.filter((s) => customTerms.some((t) => s.id.toLowerCase().includes(t) || (s.customer || "").toLowerCase().includes(t)));
     }
 
     const sorted = [...list].sort((a, b) =>
