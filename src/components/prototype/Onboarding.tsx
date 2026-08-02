@@ -235,7 +235,7 @@ export function ConfidenceAdvice({ value, thresholds }) {
 --------------------------------------------------------- */
 const TAB_INTROS = {
   dashboard: {
-    q: "The control tower.",
+    q: "The overview.",
     a: "Everything moving right now, and how much the model actually trusts its own location claim for each item. Click any number to see what's behind it.",
   },
   search: {
