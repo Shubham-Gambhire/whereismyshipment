@@ -31,7 +31,6 @@ function Index() {
       <Architecture />
       <Implementation />
       <Limitations />
-      <Stack />
       <Highlights />
     </main>
   );
