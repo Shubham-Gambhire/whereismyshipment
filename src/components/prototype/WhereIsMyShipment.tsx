@@ -10,7 +10,7 @@ import {
   Gauge, Radio, Container as ContainerIcon,
   HelpCircle, XCircle, CircleDollarSign, Layers, Scale, TrendingDown,
   Bell, Satellite, Database, RotateCcw, PlayCircle, Sliders, X, CheckCircle2,
-  Settings, CloudRain, MapPinned, Clock
+  Settings, CloudRain, MapPinned, Clock, Home
 } from "lucide-react";
 import { Glossed, Term, ConfidenceAdvice, ReadThisFirst, TabIntro } from "./Onboarding";
 
@@ -976,6 +976,66 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill }) {
         </Panel>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* The masthead for the Overview tab: enlarged animated anchor, the project
+   name at full size, and the one-line framing of what the tool actually is. */
+function BrandMark() {
+  return (
+    <div className="mb-5 flex items-start gap-3 sm:gap-4">
+      <span className="relative grid place-items-center shrink-0" style={{ width: 58, height: 58 }}>
+        <span
+          className="live-halo absolute inset-0 rounded-2xl"
+          style={{ border: `1px solid ${C.teal}`, animation: "live-halo 3.2s ease-out infinite" }}
+        />
+        <span
+          className="grid place-items-center"
+          style={{ width: 58, height: 58, borderRadius: 14, background: C.tealDim, border: `1px solid ${C.teal}55` }}
+        >
+          <Anchor size={30} color={C.teal} className="logo-bob" style={{ animation: "logo-bob 4s ease-in-out infinite" }} />
+        </span>
+      </span>
+      <span className="min-w-0">
+        <h1
+          style={{
+            fontFamily: FONT_DISPLAY,
+            fontSize: "clamp(26px, 5.4vw, 40px)",
+            fontWeight: 600,
+            letterSpacing: -0.9,
+            lineHeight: 1.08,
+            color: C.text,
+            margin: 0,
+          }}
+        >
+          Where Is My Shipment
+        </h1>
+        <span
+          className="relative block overflow-hidden"
+          style={{ height: 2, marginTop: 8, maxWidth: 320, background: C.borderSoft, borderRadius: 1 }}
+        >
+          <span
+            className="logo-sweep absolute inset-y-0"
+            style={{
+              width: "42%",
+              background: `linear-gradient(90deg, transparent, ${C.teal}, transparent)`,
+              animation: "logo-sweep 3.6s cubic-bezier(0.45,0,0.2,1) infinite",
+            }}
+          />
+        </span>
+        <p
+          style={{
+            fontFamily: FONT_MONO,
+            fontSize: 12,
+            letterSpacing: 0.4,
+            color: C.textMuted,
+            marginTop: 8,
+          }}
+        >
+          A probabilistic SKU location framework
+        </p>
+      </span>
     </div>
   );
 }
