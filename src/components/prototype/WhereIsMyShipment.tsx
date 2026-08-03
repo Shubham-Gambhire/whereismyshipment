@@ -3215,7 +3215,7 @@ function SearchView({ data, selectedId, onSelectId }) {
         </div>
         <div className="flex items-center justify-between px-0.5" style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.6, color: C.textFaint }}>
           <span>SHOWING {results.length} OF {skus.length} SKUS</span>
-          {selected && <span style={{ color: C.teal }}>1 SELECTED</span>}
+          {selectedId && <span style={{ color: C.teal }}>1 SELECTED</span>}
         </div>
         <div
           className="overflow-y-auto overflow-hidden"
