@@ -887,6 +887,18 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill, mode
 
       {modeBar}
 
+      <p
+        style={{ fontFamily: FONT_BODY, fontSize: 12.5, lineHeight: 1.6, color: C.textMuted, maxWidth: 760 }}
+      >
+        Every number on this screen comes from SKU location confidence scoring across{" "}
+        <span style={{ fontFamily: FONT_MONO, color: C.text }}>{shipments.length} shipments</span> and{" "}
+        <span style={{ fontFamily: FONT_MONO, color: C.text }}>{skus.length} SKUs</span>. The dataset is
+        synthetic, generated to behave like real ocean freight traffic, so nothing here is tied to a live
+        carrier feed.
+      </p>
+
+
+
 
       <div className="grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-4 items-start">
         <div className="flex flex-col gap-4 min-w-0">
@@ -1516,7 +1528,58 @@ function ExceptionsView({ skus, onSelectSku, preset }) {
 /* ---------------------------------------------------------
    WHAT-IF SIMULATOR
 --------------------------------------------------------- */
+function SelectedSkuBar({ sku, onClear }) {
+  if (!sku) return null;
+  const m = RISK_META[sku.risk];
+  return (
+    <div
+      className="fixed left-1/2 -translate-x-1/2 z-40 px-3"
+      style={{ bottom: 16, maxWidth: "min(560px, calc(100vw - 24px))", width: "100%" }}
+    >
+      <div
+        className="flex items-center gap-3 px-3 py-2.5 rounded-md"
+        style={{
+          background: "rgba(17,23,33,0.96)",
+          backdropFilter: "blur(10px)",
+          border: `1px solid ${C.teal}66`,
+          boxShadow: `0 10px 30px rgba(0,0,0,0.5), 0 0 0 3px ${C.teal}14`,
+        }}
+      >
+        <CheckCircle2 size={15} color={C.teal} className="shrink-0" />
+        <div className="flex flex-col min-w-0">
+          <span style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 0.7, color: C.textFaint }}>
+            SELECTED SKU
+          </span>
+          <span className="truncate" style={{ fontFamily: FONT_MONO, fontSize: 12.5, color: C.text }}>
+            {sku.id} <span style={{ color: C.textMuted }}>· {sku.customer}</span>
+          </span>
+        </div>
+        <span className="ml-auto shrink-0" style={{ fontFamily: FONT_MONO, fontSize: 13, color: m.color }}>
+          {sku.confidence.toFixed(0)}%
+        </span>
+        <button
+          onClick={onClear}
+          className="shrink-0 flex items-center gap-1 px-2 py-1 rounded"
+          style={{
+            background: "transparent",
+            border: `1px solid ${C.border}`,
+            color: C.textMuted,
+            fontFamily: FONT_MONO,
+            fontSize: 10,
+            letterSpacing: 0.6,
+            cursor: "pointer",
+          }}
+          aria-label="Unselect SKU"
+        >
+          <X size={11} /> CLEAR
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
+
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(skus[0]?.id || null);
   const [simEvents, setSimEvents] = useState([]);
@@ -1541,6 +1604,13 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
   };
 
   const selectSku = (id) => {
+    if (id === selectedId) {
+      setSelectedId(null);
+      setSimEvents([]);
+      setQueuedKeys([]);
+      return;
+    }
+
     setSelectedId(id);
     setSimEvents([]);
     setEventCategory("disruption");
@@ -1604,6 +1674,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
       </Panel>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-5 min-w-0">
+        <SelectedSkuBar sku={selectedId ? sku : null} onClear={() => selectSku(selectedId)} />
         <div className="md:col-span-2 flex flex-col gap-3 min-w-0 w-full overflow-hidden">
           <div className="flex items-center justify-between gap-2">
             <span style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.8, color: C.textFaint }}>
@@ -1626,7 +1697,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
           <div className="flex flex-col gap-2 max-h-[260px] md:max-h-[440px] overflow-y-auto pr-1">
 
             {results.map((s) => {
-              const active = sku && s.id === sku.id;
+              const active = selectedId && s.id === selectedId;
               const m = RISK_META[s.risk];
               return (
                 <button
@@ -3005,13 +3076,6 @@ export default function App() {
                 Where Is My Shipment
               </span>
             </button>
-            <span className="hidden sm:inline" style={{ width: 1, height: 14, background: C.border }} />
-            <span
-              className="hidden sm:inline truncate"
-              style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: 0.3 }}
-            >
-              SKU location confidence · {data.shipments.length} shipments · {data.skus.length} SKUs · synthetic
-            </span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <a
@@ -3136,6 +3200,7 @@ function SearchView({ data, selectedId, onSelectId }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] gap-4 min-w-0">
+      <SelectedSkuBar sku={selectedId ? selected : null} onClear={() => onSelectId(null)} />
       <div className="flex flex-col gap-2 min-w-0 w-full overflow-hidden">
         <div className="relative">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" color={C.textFaint} />
@@ -3150,19 +3215,19 @@ function SearchView({ data, selectedId, onSelectId }) {
         </div>
         <div className="flex items-center justify-between px-0.5" style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.6, color: C.textFaint }}>
           <span>SHOWING {results.length} OF {skus.length} SKUS</span>
-          {selected && <span style={{ color: C.teal }}>1 SELECTED</span>}
+          {selectedId && <span style={{ color: C.teal }}>1 SELECTED</span>}
         </div>
         <div
           className="overflow-y-auto overflow-hidden"
           style={{ maxHeight: 620, border: `1px solid ${C.border}`, borderRadius: 6, background: C.panel }}
         >
           {results.map((s, i) => {
-            const active = selected && s.id === selected.id;
+            const active = selectedId && s.id === selectedId;
             const m = RISK_META[s.risk];
             return (
               <button
                 key={s.id}
-                onClick={() => onSelectId(s.id)}
+                onClick={() => onSelectId(s.id === selectedId ? null : s.id)}
                 className="text-left w-full pl-3 pr-2 py-2 flex items-center justify-between gap-2"
                 style={{
                   background: active ? `${C.teal}14` : "transparent",
