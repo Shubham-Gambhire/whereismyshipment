@@ -1528,7 +1528,58 @@ function ExceptionsView({ skus, onSelectSku, preset }) {
 /* ---------------------------------------------------------
    WHAT-IF SIMULATOR
 --------------------------------------------------------- */
+function SelectedSkuBar({ sku, onClear }) {
+  if (!sku) return null;
+  const m = RISK_META[sku.risk];
+  return (
+    <div
+      className="fixed left-1/2 -translate-x-1/2 z-40 px-3"
+      style={{ bottom: 16, maxWidth: "min(560px, calc(100vw - 24px))", width: "100%" }}
+    >
+      <div
+        className="flex items-center gap-3 px-3 py-2.5 rounded-md"
+        style={{
+          background: "rgba(17,23,33,0.96)",
+          backdropFilter: "blur(10px)",
+          border: `1px solid ${C.teal}66`,
+          boxShadow: `0 10px 30px rgba(0,0,0,0.5), 0 0 0 3px ${C.teal}14`,
+        }}
+      >
+        <CheckCircle2 size={15} color={C.teal} className="shrink-0" />
+        <div className="flex flex-col min-w-0">
+          <span style={{ fontFamily: FONT_MONO, fontSize: 10, letterSpacing: 0.7, color: C.textFaint }}>
+            SELECTED SKU
+          </span>
+          <span className="truncate" style={{ fontFamily: FONT_MONO, fontSize: 12.5, color: C.text }}>
+            {sku.id} <span style={{ color: C.textMuted }}>· {sku.customer}</span>
+          </span>
+        </div>
+        <span className="ml-auto shrink-0" style={{ fontFamily: FONT_MONO, fontSize: 13, color: m.color }}>
+          {sku.confidence.toFixed(0)}%
+        </span>
+        <button
+          onClick={onClear}
+          className="shrink-0 flex items-center gap-1 px-2 py-1 rounded"
+          style={{
+            background: "transparent",
+            border: `1px solid ${C.border}`,
+            color: C.textMuted,
+            fontFamily: FONT_MONO,
+            fontSize: 10,
+            letterSpacing: 0.6,
+            cursor: "pointer",
+          }}
+          aria-label="Unselect SKU"
+        >
+          <X size={11} /> CLEAR
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
+
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(skus[0]?.id || null);
   const [simEvents, setSimEvents] = useState([]);
