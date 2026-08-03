@@ -1605,9 +1605,14 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-5 min-w-0">
         <div className="md:col-span-2 flex flex-col gap-3 min-w-0 w-full overflow-hidden">
-          <span style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.8, color: C.textFaint }}>
-            STEP 1 · PICK A SKU
-          </span>
+          <div className="flex items-center justify-between gap-2">
+            <span style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.8, color: C.textFaint }}>
+              STEP 1 · PICK A SKU
+            </span>
+            <span style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.6, color: C.textFaint }}>
+              {results.length} OF {skus.length}
+            </span>
+          </div>
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" color={C.textMuted} />
             <input
@@ -1628,14 +1633,29 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                   key={s.id}
                   onClick={() => selectSku(s.id)}
                   className="text-left p-3 rounded-md flex items-center justify-between gap-2"
-                  style={{ background: active ? C.panelAlt : C.panel, border: `1px solid ${active ? m.color : C.border}` }}
+                  style={{
+                    background: active ? `${C.teal}14` : C.panel,
+                    border: `1px solid ${active ? C.teal : C.border}`,
+                    boxShadow: active ? `0 0 0 3px ${C.teal}1f` : "none",
+                    transition: "background 150ms ease, box-shadow 150ms ease",
+                  }}
                 >
-                  <div className="flex flex-col gap-0.5 min-w-0">
-                    <span className="truncate" style={{ fontFamily: FONT_MONO, color: C.text, fontSize: 13 }}>{s.id}</span>
-                    <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.customer}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    {active && <CheckCircle2 size={15} color={C.teal} className="shrink-0" />}
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <span className="truncate" style={{ fontFamily: FONT_MONO, color: active ? C.teal : C.text, fontSize: 13 }}>{s.id}</span>
+                      <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.customer}</span>
+                    </div>
                   </div>
 
-                  <span style={{ fontFamily: FONT_MONO, color: m.color, fontSize: 13 }}>{s.confidence.toFixed(0)}%</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {active && (
+                      <span style={{ fontFamily: FONT_MONO, fontSize: 9.5, letterSpacing: 0.6, color: C.teal, border: `1px solid ${C.teal}66`, borderRadius: 4, padding: "1px 5px" }}>
+                        SELECTED
+                      </span>
+                    )}
+                    <span style={{ fontFamily: FONT_MONO, color: m.color, fontSize: 13 }}>{s.confidence.toFixed(0)}%</span>
+                  </div>
                 </button>
               );
             })}
