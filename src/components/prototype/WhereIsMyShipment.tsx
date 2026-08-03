@@ -1564,8 +1564,8 @@ function SelectedSkuBar({ sku, onClear }) {
   const m = RISK_META[sku.risk];
   return (
     <div
-      className="fixed left-1/2 -translate-x-1/2 z-40 w-[calc(100%-24px)] max-w-[560px]"
-      style={{ top: 92 }}
+      className="fixed left-1/2 -translate-x-1/2 z-40 max-w-[560px]"
+      style={{ top: 92, width: "calc(100% - 24px)" }}
     >
       <div
         className="flex items-center gap-3 px-3 py-2.5 rounded-md"
@@ -1582,7 +1582,7 @@ function SelectedSkuBar({ sku, onClear }) {
             SELECTED SKU
           </span>
           <span className="truncate" style={{ fontFamily: FONT_MONO, fontSize: 12.5, color: C.text }}>
-            {sku.id} <span style={{ color: C.textMuted }}>· {sku.customer}</span>
+            {sku.id} <span style={{ color: C.textMuted }}>· {sku.description}</span>
           </span>
         </div>
         <span className="ml-auto shrink-0" style={{ fontFamily: FONT_MONO, fontSize: 13, color: m.color }}>
@@ -1746,7 +1746,8 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                     {active && <CheckCircle2 size={15} color={C.teal} className="shrink-0" />}
                     <div className="flex flex-col gap-0.5 min-w-0">
                       <span className="truncate" style={{ fontFamily: FONT_MONO, color: active ? C.teal : C.text, fontSize: 13 }}>{s.id}</span>
-                      <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.customer}</span>
+                      <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.description}</span>
+                      <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 10.5 }}>{s.customer || "Customer not provided"}</span>
                     </div>
                   </div>
 
