@@ -3130,6 +3130,10 @@ function SearchView({ data, selectedId, onSelectId }) {
             style={{ background: C.panelAlt, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, fontFamily: FONT_MONO, fontSize: 12 }}
           />
         </div>
+        <div className="flex items-center justify-between px-0.5" style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.6, color: C.textFaint }}>
+          <span>SHOWING {results.length} OF {skus.length} SKUS</span>
+          {selected && <span style={{ color: C.teal }}>1 SELECTED</span>}
+        </div>
         <div
           className="overflow-y-auto overflow-hidden"
           style={{ maxHeight: 620, border: `1px solid ${C.border}`, borderRadius: 6, background: C.panel }}
@@ -3141,23 +3145,30 @@ function SearchView({ data, selectedId, onSelectId }) {
               <button
                 key={s.id}
                 onClick={() => onSelectId(s.id)}
-                className="text-left w-full px-3 py-2 flex items-center justify-between gap-2"
+                className="text-left w-full pl-3 pr-2 py-2 flex items-center justify-between gap-2"
                 style={{
-                  background: active ? C.panelAlt : "transparent",
+                  background: active ? `${C.teal}14` : "transparent",
                   border: "none",
                   borderTop: i ? `1px solid ${C.borderSoft}` : "none",
-                  borderLeft: `2px solid ${active ? m.color : "transparent"}`,
-                  transition: "background 150ms ease",
+                  borderLeft: `3px solid ${active ? C.teal : "transparent"}`,
+                  boxShadow: active ? `inset 0 0 0 1px ${C.teal}55` : "none",
+                  transition: "background 150ms ease, box-shadow 150ms ease",
                 }}
               >
-                <div className="flex flex-col min-w-0">
-                  <span className="truncate" style={{ fontFamily: FONT_MONO, color: C.text, fontSize: 11.5 }}>{s.id}</span>
-                  <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11 }}>{s.customer}</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  {active && <CheckCircle2 size={13} color={C.teal} className="shrink-0" />}
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate" style={{ fontFamily: FONT_MONO, color: active ? C.teal : C.text, fontSize: 11.5 }}>{s.id}</span>
+                    <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11 }}>{s.customer}</span>
+                  </div>
                 </div>
                 <span style={{ fontFamily: FONT_MONO, color: m.color, fontSize: 11.5 }}>{s.confidence.toFixed(0)}%</span>
               </button>
             );
           })}
+          {results.length === 0 && (
+            <div className="px-3 py-6 text-center" style={{ fontFamily: FONT_BODY, fontSize: 12, color: C.textMuted }}>No SKU matches that search.</div>
+          )}
         </div>
       </div>
 
