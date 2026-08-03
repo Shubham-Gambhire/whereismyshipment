@@ -3220,12 +3220,12 @@ function SearchView({ data, selectedId, onSelectId }) {
           style={{ maxHeight: 620, border: `1px solid ${C.border}`, borderRadius: 6, background: C.panel }}
         >
           {results.map((s, i) => {
-            const active = selected && s.id === selected.id;
+            const active = selectedId && s.id === selectedId;
             const m = RISK_META[s.risk];
             return (
               <button
                 key={s.id}
-                onClick={() => onSelectId(s.id)}
+                onClick={() => onSelectId(s.id === selectedId ? null : s.id)}
                 className="text-left w-full pl-3 pr-2 py-2 flex items-center justify-between gap-2"
                 style={{
                   background: active ? `${C.teal}14` : "transparent",
