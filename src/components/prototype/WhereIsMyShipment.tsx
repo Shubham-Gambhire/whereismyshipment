@@ -79,6 +79,36 @@ const CUSTOMERS = ["Solstice Retail Co.", "Anchor Point Supplies", "Meridian App
   "Northgate Pharma", "Vantage Auto Parts"];
 const CATEGORIES = ["Electronics", "Apparel", "Furniture", "Automotive Parts",
   "Consumer Goods", "Pharmaceuticals", "Industrial Equipment"];
+const SKU_PRODUCTS = [
+  { name: "Lithium battery management module", category: "Electronics" },
+  { name: "Industrial temperature sensor", category: "Electronics" },
+  { name: "Fiber optic network switch", category: "Electronics" },
+  { name: "Noise-cancelling headset assembly", category: "Electronics" },
+  { name: "Organic cotton work jacket", category: "Apparel" },
+  { name: "Waterproof safety boot", category: "Apparel" },
+  { name: "Recycled polyester uniform set", category: "Apparel" },
+  { name: "Modular oak shelving unit", category: "Furniture" },
+  { name: "Ergonomic task chair", category: "Furniture" },
+  { name: "Flat-pack conference table", category: "Furniture" },
+  { name: "Electric power steering motor", category: "Automotive Parts" },
+  { name: "Ceramic brake pad set", category: "Automotive Parts" },
+  { name: "Fuel injection rail assembly", category: "Automotive Parts" },
+  { name: "EV thermal management valve", category: "Automotive Parts" },
+  { name: "Stainless steel cookware set", category: "Consumer Goods" },
+  { name: "Reusable water filtration pitcher", category: "Consumer Goods" },
+  { name: "Cordless vacuum cleaner", category: "Consumer Goods" },
+  { name: "Insulated food storage kit", category: "Consumer Goods" },
+  { name: "Temperature-controlled insulin pens", category: "Pharmaceuticals" },
+  { name: "Sterile surgical suture kit", category: "Pharmaceuticals" },
+  { name: "Rapid diagnostic test cartridges", category: "Pharmaceuticals" },
+  { name: "Respiratory inhaler canisters", category: "Pharmaceuticals" },
+  { name: "CNC spindle motor", category: "Industrial Equipment" },
+  { name: "Hydraulic pump assembly", category: "Industrial Equipment" },
+  { name: "Food-grade conveyor belt", category: "Industrial Equipment" },
+  { name: "Robotic welding torch", category: "Industrial Equipment" },
+  { name: "Solar inverter enclosure", category: "Industrial Equipment" },
+  { name: "Cold-chain data logger", category: "Electronics" },
+];
 // Rough per-unit price range by category, used to derive a $ value per SKU.
 const CATEGORY_UNIT_PRICE = {
   Electronics: [20, 300],
@@ -499,11 +529,12 @@ function generateData() {
       const numSkus = randInt(4, 9);
       const palletCount = randInt(1, Math.max(1, Math.floor(numSkus / 3)));
       const palletIds = Array.from({ length: palletCount }, () => `PAL-${(9000 + palletCounter++).toString()}`);
-      const customer = pick(CUSTOMERS);
       for (let k = 0; k < numSkus; k++) {
         const skuId = `SKU-${(700000 + skuCounter).toString()}`;
+        const product = SKU_PRODUCTS[(skuCounter - 1) % SKU_PRODUCTS.length];
         skuCounter++;
-        const category = CATEGORIES[k % CATEGORIES.length];
+        const category = product.category;
+        const customer = pick(CUSTOMERS);
         // Small per-SKU jitter so not every SKU in a container is identical,
         // reflecting occasional item-level missing scans.
         let skuConfidence = confidence;
@@ -535,7 +566,7 @@ function generateData() {
         const customerMissing = rng() < 0.025;
         skus.push({
           id: skuId,
-          description: `${category} item`,
+          description: product.name,
           category,
           customer: customerMissing ? null : customer,
           quantity,
@@ -1533,8 +1564,8 @@ function SelectedSkuBar({ sku, onClear }) {
   const m = RISK_META[sku.risk];
   return (
     <div
-      className="sticky z-30 w-full"
-      style={{ top: 8, paddingBottom: 8 }}
+      className="fixed left-1/2 -translate-x-1/2 z-40 max-w-[560px]"
+      style={{ top: 92, width: "calc(100% - 24px)" }}
     >
       <div
         className="flex items-center gap-3 px-3 py-2.5 rounded-md"
@@ -1551,7 +1582,7 @@ function SelectedSkuBar({ sku, onClear }) {
             SELECTED SKU
           </span>
           <span className="truncate" style={{ fontFamily: FONT_MONO, fontSize: 12.5, color: C.text }}>
-            {sku.id} <span style={{ color: C.textMuted }}>· {sku.customer}</span>
+            {sku.id} <span style={{ color: C.textMuted }}>· {sku.description}</span>
           </span>
         </div>
         <span className="ml-auto shrink-0" style={{ fontFamily: FONT_MONO, fontSize: 13, color: m.color }}>
@@ -1589,7 +1620,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     const matched = q
-      ? skus.filter((s) => s.id.toLowerCase().includes(q) || s.customer.toLowerCase().includes(q))
+      ? skus.filter((s) => s.id.toLowerCase().includes(q) || (s.customer || "").toLowerCase().includes(q) || s.description.toLowerCase().includes(q))
       : skus;
     if (!selectedId) return matched;
     const sel = matched.find((s) => s.id === selectedId);
@@ -1689,7 +1720,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search SKU or customer…"
+              placeholder="Search SKU, product or customer…"
               className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-md outline-none text-sm"
               style={{ background: C.panelAlt, border: `1px solid ${C.border}`, color: C.text, fontFamily: FONT_MONO }}
             />
@@ -1715,7 +1746,8 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
                     {active && <CheckCircle2 size={15} color={C.teal} className="shrink-0" />}
                     <div className="flex flex-col gap-0.5 min-w-0">
                       <span className="truncate" style={{ fontFamily: FONT_MONO, color: active ? C.teal : C.text, fontSize: 13 }}>{s.id}</span>
-                      <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.customer}</span>
+                      <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textMuted, fontSize: 12 }}>{s.description}</span>
+                      <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 10.5 }}>{s.customer || "Customer not provided"}</span>
                     </div>
                   </div>
 
@@ -3187,7 +3219,7 @@ function SearchView({ data, selectedId, onSelectId }) {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     const matched = q
-      ? skus.filter((s) => s.id.toLowerCase().includes(q) || s.customer.toLowerCase().includes(q) || s.category.toLowerCase().includes(q))
+      ? skus.filter((s) => s.id.toLowerCase().includes(q) || (s.customer || "").toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || s.description.toLowerCase().includes(q))
       : skus;
     if (!selectedId) return matched;
     const sel = matched.find((s) => s.id === selectedId);
@@ -3242,7 +3274,7 @@ function SearchView({ data, selectedId, onSelectId }) {
                   {active && <CheckCircle2 size={13} color={C.teal} className="shrink-0" />}
                   <div className="flex flex-col min-w-0">
                     <span className="truncate" style={{ fontFamily: FONT_MONO, color: active ? C.teal : C.text, fontSize: 11.5 }}>{s.id}</span>
-                    <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11 }}>{s.customer}</span>
+                    <span className="truncate" style={{ fontFamily: FONT_BODY, color: C.textFaint, fontSize: 11 }}>{s.description}</span>
                   </div>
                 </div>
                 <span style={{ fontFamily: FONT_MONO, color: m.color, fontSize: 11.5 }}>{s.confidence.toFixed(0)}%</span>
