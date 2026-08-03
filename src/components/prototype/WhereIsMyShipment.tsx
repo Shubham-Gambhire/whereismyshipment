@@ -1533,8 +1533,8 @@ function SelectedSkuBar({ sku, onClear }) {
   const m = RISK_META[sku.risk];
   return (
     <div
-      className="fixed left-1/2 -translate-x-1/2 z-40 px-3"
-      style={{ bottom: 16, maxWidth: "min(560px, calc(100vw - 24px))", width: "100%" }}
+      className="sticky z-30 w-full"
+      style={{ top: 8, paddingBottom: 8 }}
     >
       <div
         className="flex items-center gap-3 px-3 py-2.5 rounded-md"
@@ -1674,11 +1674,11 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
       </Panel>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-5 min-w-0">
-        <SelectedSkuBar sku={selectedId ? sku : null} onClear={() => selectSku(selectedId)} />
-        <div className="md:col-span-2 flex flex-col gap-3 min-w-0 w-full overflow-hidden">
+        <div className="md:col-span-2 flex flex-col gap-3 min-w-0 w-full">
+          <SelectedSkuBar sku={selectedId ? sku : null} onClear={() => selectSku(selectedId)} />
           <div className="flex items-center justify-between gap-2">
             <span style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.8, color: C.textFaint }}>
-              STEP 1 · PICK A SKU
+              ALL SKUS
             </span>
             <span style={{ fontFamily: FONT_MONO, fontSize: 10.5, letterSpacing: 0.6, color: C.textFaint }}>
               {results.length} OF {skus.length}
@@ -3200,8 +3200,8 @@ function SearchView({ data, selectedId, onSelectId }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] gap-4 min-w-0">
-      <SelectedSkuBar sku={selectedId ? selected : null} onClear={() => onSelectId(null)} />
-      <div className="flex flex-col gap-2 min-w-0 w-full overflow-hidden">
+      <div className="flex flex-col gap-2 min-w-0 w-full">
+        <SelectedSkuBar sku={selectedId ? selected : null} onClear={() => onSelectId(null)} />
         <div className="relative">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" color={C.textFaint} />
           <input
