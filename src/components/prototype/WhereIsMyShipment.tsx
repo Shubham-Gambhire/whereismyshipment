@@ -1604,6 +1604,13 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
   };
 
   const selectSku = (id) => {
+    if (id === selectedId) {
+      setSelectedId(null);
+      setSimEvents([]);
+      setQueuedKeys([]);
+      return;
+    }
+
     setSelectedId(id);
     setSimEvents([]);
     setEventCategory("disruption");
