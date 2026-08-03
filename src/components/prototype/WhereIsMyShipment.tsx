@@ -3200,8 +3200,8 @@ function SearchView({ data, selectedId, onSelectId }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] gap-4 min-w-0">
-      <SelectedSkuBar sku={selectedId ? selected : null} onClear={() => onSelectId(null)} />
-      <div className="flex flex-col gap-2 min-w-0 w-full overflow-hidden">
+      <div className="flex flex-col gap-2 min-w-0 w-full">
+        <SelectedSkuBar sku={selectedId ? selected : null} onClear={() => onSelectId(null)} />
         <div className="relative">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2" color={C.textFaint} />
           <input
