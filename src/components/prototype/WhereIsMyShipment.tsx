@@ -3103,15 +3103,13 @@ function SearchView({ data, selectedId, onSelectId }) {
   const { skus, containers, shipments, thresholds } = data;
 
   const results = useMemo(() => {
-    if (!query.trim()) {
-      if (selectedId) {
-        const s = skus.find((s) => s.id === selectedId);
-        return s ? [s, ...skus.filter((x) => x.id !== selectedId).slice(0, 7)] : skus.slice(0, 8);
-      }
-      return skus.slice(0, 8);
-    }
-    const q = query.toLowerCase();
-    return skus.filter((s) => s.id.toLowerCase().includes(q) || s.customer.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)).slice(0, 20);
+    const q = query.trim().toLowerCase();
+    const matched = q
+      ? skus.filter((s) => s.id.toLowerCase().includes(q) || s.customer.toLowerCase().includes(q) || s.category.toLowerCase().includes(q))
+      : skus;
+    if (!selectedId) return matched;
+    const sel = matched.find((s) => s.id === selectedId);
+    return sel ? [sel, ...matched.filter((s) => s.id !== selectedId)] : matched;
   }, [query, skus, selectedId]);
 
   const selected = skus.find((s) => s.id === selectedId) || results[0];
