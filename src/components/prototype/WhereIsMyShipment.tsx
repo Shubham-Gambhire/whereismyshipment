@@ -3017,13 +3017,6 @@ export default function App() {
                 Where Is My Shipment
               </span>
             </button>
-            <span className="hidden sm:inline" style={{ width: 1, height: 14, background: C.border }} />
-            <span
-              className="hidden sm:inline truncate"
-              style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: 0.3 }}
-            >
-              SKU location confidence · {data.shipments.length} shipments · {data.skus.length} SKUs · synthetic
-            </span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <a
