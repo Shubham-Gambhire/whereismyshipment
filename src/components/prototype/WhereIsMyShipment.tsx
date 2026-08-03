@@ -1696,7 +1696,7 @@ function WhatIfView({ skus, mode, weights, thresholds, sourceReliability }) {
           <div className="flex flex-col gap-2 max-h-[260px] md:max-h-[440px] overflow-y-auto pr-1">
 
             {results.map((s) => {
-              const active = sku && s.id === sku.id;
+              const active = selectedId && s.id === selectedId;
               const m = RISK_META[s.risk];
               return (
                 <button
