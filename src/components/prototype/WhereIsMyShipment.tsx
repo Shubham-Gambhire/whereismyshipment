@@ -1533,8 +1533,8 @@ function SelectedSkuBar({ sku, onClear }) {
   const m = RISK_META[sku.risk];
   return (
     <div
-      className="fixed left-1/2 -translate-x-1/2 z-40 px-3"
-      style={{ bottom: 16, maxWidth: "min(560px, calc(100vw - 24px))", width: "100%" }}
+      className="sticky z-30 w-full"
+      style={{ top: 8, paddingBottom: 8 }}
     >
       <div
         className="flex items-center gap-3 px-3 py-2.5 rounded-md"
