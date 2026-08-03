@@ -887,6 +887,18 @@ function DashboardView({ shipments, containers, skus, onSelectSku, onDrill, mode
 
       {modeBar}
 
+      <p
+        style={{ fontFamily: FONT_BODY, fontSize: 12.5, lineHeight: 1.6, color: C.textMuted, maxWidth: 760 }}
+      >
+        Every number on this screen comes from SKU location confidence scoring across{" "}
+        <span style={{ fontFamily: FONT_MONO, color: C.text }}>{shipments.length} shipments</span> and{" "}
+        <span style={{ fontFamily: FONT_MONO, color: C.text }}>{skus.length} SKUs</span>. The dataset is
+        synthetic, generated to behave like real ocean freight traffic, so nothing here is tied to a live
+        carrier feed.
+      </p>
+
+
+
 
       <div className="grid lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-4 items-start">
         <div className="flex flex-col gap-4 min-w-0">
