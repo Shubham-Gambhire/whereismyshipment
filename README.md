@@ -3,7 +3,8 @@
 *A probabilistic SKU location framework for ocean freight visibility.*
 
 **Live prototype:** [whereismyshipment.lovable.app](https://whereismyshipment.lovable.app)  
-**Project development report:** [Download PDF ↗](https://whereismyshipment.lovable.app/__l5e/assets-v1/47e5f6a9-4c78-4f0f-9f4a-7f6f0f0f0f0f/report.pdf)  
+**Project development report:** [Download PDF ↗](https://whereismyshipment.lovable.app/__l5e/assets-v1/ed0552bb-550b-4b40-88d9-774abd58bc87/Where-Is-My-Shipment-Project-Development-Report.pdf)
+
 *(The report documents the problem, design decisions, bugs found and fixed, and what is real versus simulated.)*
 
 ---
