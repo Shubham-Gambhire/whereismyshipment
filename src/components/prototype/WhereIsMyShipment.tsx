@@ -3212,7 +3212,7 @@ export default function App() {
             GitHub ↗
           </a>
           <a
-            href={reportAsset.url}
+            href="/project-report"
             target="_blank"
             rel="noreferrer"
             style={{ color: C.teal, textDecoration: "none" }}
