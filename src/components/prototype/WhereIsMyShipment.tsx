@@ -12,7 +12,6 @@ import {
   Bell, Satellite, Database, RotateCcw, PlayCircle, Sliders, X, CheckCircle2,
   Settings, CloudRain, MapPinned, Clock, Github, FileText
 } from "lucide-react";
-import reportAsset from "@/assets/report.pdf.asset.json";
 import { Glossed, Term, ConfidenceAdvice, ReadThisFirst, TabIntro } from "./Onboarding";
 
 /* ---------------------------------------------------------
@@ -3212,7 +3211,7 @@ export default function App() {
             GitHub ↗
           </a>
           <a
-            href={reportAsset.url}
+            href="/project-report"
             target="_blank"
             rel="noreferrer"
             style={{ color: C.teal, textDecoration: "none" }}
