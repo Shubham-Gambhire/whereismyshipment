@@ -3,7 +3,7 @@
 *A probabilistic SKU location framework for ocean freight visibility.*
 
 **Live prototype:** [whereismyshipment.lovable.app](https://whereismyshipment.lovable.app)  
-**Project development report:** [Download PDF ↗](https://whereismyshipment.lovable.app/__l5e/assets-v1/ed0552bb-550b-4b40-88d9-774abd58bc87/Where-Is-My-Shipment-Project-Development-Report.pdf)
+**Project development report:** [Read online ↗](https://whereismyshipment.lovable.app/project-report)
 
 *(The report documents the problem, design decisions, bugs found and fixed, and what is real versus simulated.)*
 
@@ -87,7 +87,7 @@ This is a prototype, and the project is explicit about its boundaries:
 - **Real working logic:** the confidence engine, the synthetic data generator, the priority scoring, the data-quality safeguards, the custody ladder, the route map, and the simulator math.
 - **Simulated stand-ins:** the AIS vessel feed, the ERP reconciliation, and the Calibrated-mode weights. These are labeled as illustrative, and the Logic tab explains what a production version would need for each.
 
-See the [project development report](https://whereismyshipment.lovable.app/__l5e/assets-v1/ed0552bb-550b-4b40-88d9-774abd58bc87/Where-Is-My-Shipment-Project-Development-Report.pdf) for the full honest breakdown.
+See the [project development report](https://whereismyshipment.lovable.app/project-report) for the full honest breakdown.
 
 ---
 
