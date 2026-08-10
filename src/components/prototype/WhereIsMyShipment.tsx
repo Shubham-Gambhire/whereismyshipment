@@ -1080,6 +1080,32 @@ function BrandMark() {
         >
           A probabilistic SKU location framework
         </p>
+        <span className="mt-3 flex flex-wrap items-center gap-2">
+          <a
+            href="https://github.com/Shubham-Gambhire/whereismyshipment"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-1.5 transition-colors hover:opacity-90"
+            style={{
+              fontFamily: FONT_MONO, fontSize: 11, letterSpacing: 0.6, color: C.text,
+              border: `1px solid ${C.border}`, background: C.panelAlt, borderRadius: 6, padding: "6px 10px",
+            }}
+          >
+            <Github size={13} color={C.textMuted} /> SOURCE CODE
+          </a>
+          <a
+            href={reportAsset.url}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-1.5 transition-colors hover:opacity-90"
+            style={{
+              fontFamily: FONT_MONO, fontSize: 11, letterSpacing: 0.6, color: C.teal,
+              border: `1px solid ${C.teal}55`, background: C.tealDim, borderRadius: 6, padding: "6px 10px",
+            }}
+          >
+            <FileText size={13} color={C.teal} /> DEVELOPMENT REPORT (PDF)
+          </a>
+        </span>
       </span>
     </div>
   );
