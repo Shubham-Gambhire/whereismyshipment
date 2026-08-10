@@ -87,7 +87,7 @@ This is a prototype, and the project is explicit about its boundaries:
 - **Real working logic:** the confidence engine, the synthetic data generator, the priority scoring, the data-quality safeguards, the custody ladder, the route map, and the simulator math.
 - **Simulated stand-ins:** the AIS vessel feed, the ERP reconciliation, and the Calibrated-mode weights. These are labeled as illustrative, and the Logic tab explains what a production version would need for each.
 
-See the [project development report](https://whereismyshipment.lovable.app/__l5e/assets-v1/47e5f6a9-4c78-4f0f-9f4a-7f6f0f0f0f0f/report.pdf) for the full honest breakdown.
+See the [project development report](https://whereismyshipment.lovable.app/__l5e/assets-v1/ed0552bb-550b-4b40-88d9-774abd58bc87/Where-Is-My-Shipment-Project-Development-Report.pdf) for the full honest breakdown.
 
 ---
 
