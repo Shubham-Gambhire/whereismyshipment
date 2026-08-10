@@ -1080,32 +1080,6 @@ function BrandMark() {
         >
           A probabilistic SKU location framework
         </p>
-        <span className="mt-3 flex flex-wrap items-center gap-2">
-          <a
-            href="https://github.com/Shubham-Gambhire/whereismyshipment"
-            target="_blank"
-            rel="noreferrer noopener"
-            className="inline-flex items-center gap-1.5 transition-colors hover:opacity-90"
-            style={{
-              fontFamily: FONT_MONO, fontSize: 11, letterSpacing: 0.6, color: C.text,
-              border: `1px solid ${C.border}`, background: C.panelAlt, borderRadius: 6, padding: "6px 10px",
-            }}
-          >
-            <Github size={13} color={C.textMuted} /> SOURCE CODE
-          </a>
-          <a
-            href={reportAsset.url}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="inline-flex items-center gap-1.5 transition-colors hover:opacity-90"
-            style={{
-              fontFamily: FONT_MONO, fontSize: 11, letterSpacing: 0.6, color: C.teal,
-              border: `1px solid ${C.teal}55`, background: C.tealDim, borderRadius: 6, padding: "6px 10px",
-            }}
-          >
-            <FileText size={13} color={C.teal} /> DEVELOPMENT REPORT (PDF)
-          </a>
-        </span>
       </span>
     </div>
   );
@@ -3227,10 +3201,23 @@ export default function App() {
         className="max-w-[1440px] mx-auto px-3 sm:px-5 py-5 flex flex-wrap items-center justify-between gap-2"
         style={{ fontFamily: FONT_MONO, fontSize: 10.5, color: C.textFaint, borderTop: `1px solid ${C.borderSoft}` }}
       >
-        <span className="flex items-center gap-3">
+        <span className="flex flex-wrap items-center gap-3">
           <span>Built by Shubham Gambhire</span>
-          <a href="https://github.com/shubhamgambhire" target="_blank" rel="noreferrer" style={{ color: C.textMuted, textDecoration: "none" }}>
+          <a
+            href="https://github.com/Shubham-Gambhire/whereismyshipment"
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: C.textMuted, textDecoration: "none" }}
+          >
             GitHub ↗
+          </a>
+          <a
+            href={reportAsset.url}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: C.teal, textDecoration: "none" }}
+          >
+            Project Development Report ↗
           </a>
         </span>
       </footer>
