@@ -12,7 +12,6 @@ import {
   Bell, Satellite, Database, RotateCcw, PlayCircle, Sliders, X, CheckCircle2,
   Settings, CloudRain, MapPinned, Clock, Github, FileText
 } from "lucide-react";
-import reportAsset from "@/assets/report.pdf.asset.json";
 import { Glossed, Term, ConfidenceAdvice, ReadThisFirst, TabIntro } from "./Onboarding";
 
 /* ---------------------------------------------------------
