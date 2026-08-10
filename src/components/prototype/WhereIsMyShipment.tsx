@@ -3219,6 +3219,15 @@ export default function App() {
             Project Development Report ↗
           </a>
         </span>
+        <a
+          href="https://www.linkedin.com/in/shubhambg"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-1.5"
+          style={{ color: C.textMuted, textDecoration: "none" }}
+        >
+          <Linkedin size={12} /> LinkedIn ↗
+        </a>
       </footer>
 
     </div>
