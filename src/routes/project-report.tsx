@@ -59,7 +59,7 @@ function ProjectReport() {
       <article className="mx-auto max-w-5xl px-4 pb-24 pt-14 sm:px-6 sm:pt-20">
         <div className="mb-16 border-b border-border-soft pb-14">
           <Anchor className="mb-7 text-teal" size={38} strokeWidth={1.5} aria-hidden="true" />
-          <p className="mb-4 font-mono text-xs uppercase text-teal">Project development report · August 2026</p>
+          <p className="mb-4 font-mono text-xs uppercase text-teal">Project development report</p>
           <h1 className="max-w-4xl font-sans text-4xl font-semibold leading-tight sm:text-6xl">Where Is My Shipment</h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">A probabilistic SKU location framework for ocean freight visibility.</p>
           <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 font-mono text-xs">
